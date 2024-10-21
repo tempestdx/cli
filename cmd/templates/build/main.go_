@@ -1,0 +1,122 @@
+package main
+
+import (
+	"context"
+	"errors"
+	"flag"
+	"fmt"
+	"log/slog"
+	"net"
+	"net/http"
+	"os"
+	"strconv"
+
+	"connectrpc.com/connect"
+	appv1connect "github.com/tempestdx/protobuf/gen/go/tempestdx/app/v1/appv1connect"
+	"github.com/tempestdx/sdk-go/app"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
+)
+
+var logger = slog.New(slog.NewJSONHandler(os.Stderr, nil))
+
+type AppServer struct {
+	apps []*appHandler
+	done chan struct{}
+}
+
+type appHandler struct {
+	a       *app.App
+	appID   string
+	version string
+}
+
+func NewAppServer() *AppServer {
+	return &AppServer{
+		done: make(chan struct{}),
+	}
+}
+
+func (s *AppServer) Run() error {
+	flagPort := flag.Int("port", 0, "port on which to listen")
+	flag.Parse()
+
+	mux := http.NewServeMux()
+	for _, a := range s.apps {
+		path := fmt.Sprintf("/%s", a.appID+"-"+a.version)
+		describeHandler := connect.NewUnaryHandler(
+			appv1connect.AppServiceDescribeProcedure,
+			a.a.Describe,
+		)
+		mux.Handle(path+appv1connect.AppServiceDescribeProcedure, describeHandler)
+
+		executeResourceOperationHandler := connect.NewUnaryHandler(
+			appv1connect.AppServiceExecuteResourceOperationProcedure,
+			a.a.ExecuteResourceOperation,
+		)
+		mux.Handle(path+appv1connect.AppServiceExecuteResourceOperationProcedure, executeResourceOperationHandler)
+
+		executeResourceActionHandler := connect.NewUnaryHandler(
+			appv1connect.AppServiceExecuteResourceActionProcedure,
+			a.a.ExecuteResourceAction,
+		)
+		mux.Handle(path+appv1connect.AppServiceExecuteResourceActionProcedure, executeResourceActionHandler)
+
+		listResourcesHandler := connect.NewUnaryHandler(
+			appv1connect.AppServiceListResourcesProcedure,
+			a.a.ListResources,
+		)
+		mux.Handle(path+appv1connect.AppServiceListResourcesProcedure, listResourcesHandler)
+
+		healthcheckHandler := connect.NewUnaryHandler(
+			appv1connect.AppServiceHealthCheckProcedure,
+			a.a.HealthCheck,
+		)
+		mux.Handle(path+appv1connect.AppServiceHealthCheckProcedure, healthcheckHandler)
+	}
+
+	listener, err := net.Listen("tcp", ":"+strconv.Itoa(*flagPort))
+	if err != nil {
+		return fmt.Errorf("listen: %w", err)
+	}
+
+	// Write the port so Tempest can connect to it.
+	port := listener.Addr().(*net.TCPAddr).Port
+	_, err = fmt.Printf("%d\n", port)
+	if err != nil {
+		return fmt.Errorf("write port: %w", err)
+	}
+
+	server := &http.Server{
+		// Use h2c so we can serve HTTP/2 without TLS.
+		Handler: h2c.NewHandler(mux, &http2.Server{}),
+	}
+
+	go func() {
+		err := server.Serve(listener)
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logger.Error("Serve failed", "error", err)
+		}
+	}()
+
+	<-s.done
+	err = server.Shutdown(context.Background())
+	if err != nil {
+		return fmt.Errorf("shutdown: %w", err)
+	}
+
+	return nil
+}
+
+func main() {
+	// Create a new AppServer with the desired apps.
+	server := NewAppServer()
+	server.RegisterApps()
+
+	// Run the AppServer.
+	err := server.Run()
+	if err != nil {
+		logger.Error("AppServer failed", "error", err)
+		os.Exit(1)
+	}
+}

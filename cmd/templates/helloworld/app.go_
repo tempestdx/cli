@@ -1,0 +1,38 @@
+package {{ .PackageName }}
+
+import (
+	"context"
+	"strconv"
+	"time"
+
+	"github.com/tempestdx/sdk-go/app"
+)
+
+var resourceDefinition = app.ResourceDefinition{
+	Type:             "example",
+	DisplayName:      "Example Resource",
+	LifecycleStage:   app.LifecycleStageCode,
+	PropertiesSchema: app.MustParseJSONSchema(app.GenericEmptySchema),
+}
+
+func createFn(_ context.Context, req *app.OperationRequest) (*app.OperationResponse, error) {
+	return &app.OperationResponse{
+		Resource: &app.Resource{
+			ExternalID:  strconv.Itoa(int(time.Now().Unix())),
+			DisplayName: "Example Resource",
+			Type:        req.Resource.Type,
+			Properties:  map[string]any{},
+		},
+	}, nil
+}
+
+func App() *app.App {
+	resourceDefinition.CreateFn(
+		createFn,
+		app.MustParseJSONSchema(app.GenericEmptySchema),
+	)
+
+	return app.New(
+		app.WithResourceDefinition(resourceDefinition),
+	)
+}
