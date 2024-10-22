@@ -33,6 +33,11 @@ archives:
       - goos: windows
         format: zip
 
+release:
+  draft: true
+  replace_existing_draft: true
+  prerelease: auto
+
 changelog:
   use: github
   sort: asc
