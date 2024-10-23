@@ -80,7 +80,7 @@ func serveRunE(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("generate build dir: %w", err)
 	}
 
-	runners, cancel, err := runner.StartApps(context.TODO(), cfg)
+	runners, cancel, err := runner.StartApps(context.TODO(), cfg, cfgDir)
 	if err != nil {
 		return fmt.Errorf("start local app: %w", err)
 	}

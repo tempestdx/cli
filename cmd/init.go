@@ -72,7 +72,7 @@ func initRunE(cmd *cobra.Command, args []string) error {
 			cfg = &config.TempestConfig{
 				Version:  "v1",
 				Apps:     make(map[string][]*config.AppVersion),
-				BuildDir: filepath.Join(workdir, ".build"),
+				BuildDir: ".build",
 			}
 			cfgPath = workdir
 		} else {
@@ -251,12 +251,14 @@ func generateGitIgnore(cfgPath string) error {
 }
 
 func generateBuildDir(cfg *config.TempestConfig, cfgPath string) error {
-	if err := os.MkdirAll(cfg.BuildDir, 0o755); err != nil {
+	absBuildDir := filepath.Join(cfgPath, cfg.BuildDir)
+
+	if err := os.MkdirAll(absBuildDir, 0o755); err != nil {
 		return err
 	}
 
 	// Symlink cfgPath/apps/ to the cfg.BuildDir/apps/ directory
-	err := os.Symlink(filepath.Join(cfgPath, "apps/"), filepath.Join(cfg.BuildDir, "apps/"))
+	err := os.Symlink(filepath.Join(cfgPath, "apps/"), filepath.Join(absBuildDir, "apps/"))
 	if err != nil {
 		if !os.IsExist(err) {
 			return err
@@ -268,13 +270,13 @@ func generateBuildDir(cfg *config.TempestConfig, cfgPath string) error {
 		return err
 	}
 
-	err = os.WriteFile(filepath.Join(cfg.BuildDir, "main.go"), f, 0o644)
+	err = os.WriteFile(filepath.Join(absBuildDir, "main.go"), f, 0o644)
 	if err != nil {
 		return err
 	}
 
 	// Remove go.mod if it exists
-	goModPath := filepath.Join(cfg.BuildDir, "go.mod")
+	goModPath := filepath.Join(absBuildDir, "go.mod")
 	if _, err := os.Stat(goModPath); err == nil {
 		err := os.Remove(goModPath)
 		if err != nil {
@@ -283,7 +285,7 @@ func generateBuildDir(cfg *config.TempestConfig, cfgPath string) error {
 	}
 
 	// Remove go.sum if it exists
-	goSumPath := filepath.Join(cfg.BuildDir, "go.sum")
+	goSumPath := filepath.Join(absBuildDir, "go.sum")
 	if _, err := os.Stat(goSumPath); err == nil {
 		err := os.Remove(goSumPath)
 		if err != nil {
@@ -292,20 +294,20 @@ func generateBuildDir(cfg *config.TempestConfig, cfgPath string) error {
 	}
 
 	modInit := exec.Command("go", "mod", "init", "tempestappserver")
-	modInit.Dir = cfg.BuildDir
+	modInit.Dir = absBuildDir
 	err = modInit.Run()
 	if err != nil {
 		return err
 	}
 
 	modTidy := exec.Command("go", "mod", "tidy")
-	modTidy.Dir = cfg.BuildDir
+	modTidy.Dir = absBuildDir
 	err = modTidy.Run()
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(filepath.Join(cfg.BuildDir, "apps.go"), appsDotGoContent(cfg), 0o644)
+	err = os.WriteFile(filepath.Join(absBuildDir, "apps.go"), appsDotGoContent(cfg), 0o644)
 	if err != nil {
 		return err
 	}

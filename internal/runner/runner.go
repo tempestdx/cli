@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"time"
 
 	"connectrpc.com/connect"
@@ -25,17 +26,19 @@ type Runner struct {
 
 // Start the app runner and return clients for each service.
 // If path is provided, only that app client will be returned.
-func StartApps(ctx context.Context, cfg *config.TempestConfig) ([]Runner, func(), error) {
+func StartApps(ctx context.Context, cfg *config.TempestConfig, cfgDir string) ([]Runner, func(), error) {
+	absBuildDir := filepath.Join(cfgDir, cfg.BuildDir)
+
 	var cmd *exec.Cmd
-	info, err := os.Stat(cfg.BuildDir)
+	info, err := os.Stat(absBuildDir)
 	if err != nil {
 		return nil, nil, err
 	}
 	if info.IsDir() {
 		cmd = exec.Command("go", "run", ".")
-		cmd.Dir = cfg.BuildDir
+		cmd.Dir = absBuildDir
 	} else {
-		return nil, nil, fmt.Errorf("invalid build directory: %s", cfg.BuildDir)
+		return nil, nil, fmt.Errorf("invalid build directory: %s", absBuildDir)
 	}
 
 	// Start process

@@ -1,4 +1,4 @@
 package version
 
 // Will be replaced at build time with LDFlags.
-var Version = "0.0.1"
+var Version = "v0.0.0-latest"

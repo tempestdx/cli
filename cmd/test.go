@@ -56,7 +56,7 @@ func testRunE(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cfg, _, err := config.ReadConfig()
+	cfg, cfgDir, err := config.ReadConfig()
 	if err != nil {
 		return fmt.Errorf("read config: %w", err)
 	}
@@ -66,7 +66,7 @@ func testRunE(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("app %s:%s not found in config", testAppID, testAppVersion)
 	}
 
-	runners, cancel, err := runner.StartApps(context.TODO(), cfg)
+	runners, cancel, err := runner.StartApps(context.TODO(), cfg, cfgDir)
 	if err != nil {
 		return fmt.Errorf("start local app: %w", err)
 	}
