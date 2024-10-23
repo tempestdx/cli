@@ -58,8 +58,8 @@ github.com/stretchr/objx v0.5.2/go.mod h1:FRsXN1f5AsAjCGJKqEizvkpNtU+EGNCLh3NxZ/
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
 github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsTg=
 github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
-github.com/tempestdx/openapi v0.1.0 h1:eQlaXBPLevkv+e/Oa0B25wXGXa+wSDMBqXIksbTYe04=
-github.com/tempestdx/openapi v0.1.0/go.mod h1:SX4SFmXA3VA+p/PQ7eefdro5iIas2ASt/WpHntRatgU=
+github.com/tempestdx/openapi v0.1.1 h1:Ap0PG0hxsP6pwogmRg+2uGWXhVSgJGi1O2pBinG+q6s=
+github.com/tempestdx/openapi v0.1.1/go.mod h1:SX4SFmXA3VA+p/PQ7eefdro5iIas2ASt/WpHntRatgU=
 github.com/tempestdx/protobuf v0.1.0 h1:SHZt2lnZmKj27z8+kg8PYYZCTeEofig1dxzWyaGJ2Yw=
 github.com/tempestdx/protobuf v0.1.0/go.mod h1:9CmOJ2y+f9Hjo6XwXscDMb+RuYn8MnPXRtPSkt/yG1g=
 github.com/tempestdx/sdk-go v0.1.0 h1:BEkeEFG4BeTGWtrwpwrE76h6OYDBZ6UCG0L/ErzLVvk=
