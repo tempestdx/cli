@@ -56,7 +56,7 @@ func testRunE(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cfg, _, err := config.ReadConfig()
+	cfg, cfgDir, err := config.ReadConfig()
 	if err != nil {
 		return fmt.Errorf("read config: %w", err)
 	}
@@ -66,7 +66,7 @@ func testRunE(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("app %s:%s not found in config", testAppID, testAppVersion)
 	}
 
-	runners, cancel, err := runner.StartApps(context.TODO(), cfg)
+	runners, cancel, err := runner.StartApps(context.TODO(), cfg, cfgDir)
 	if err != nil {
 		return fmt.Errorf("start local app: %w", err)
 	}
@@ -229,28 +229,42 @@ func testRunE(cmd *cobra.Command, args []string) error {
 		cmd.Println("Resource deleted with ID: ", res.Msg.Resource.GetExternalId())
 
 	case "list":
-		req := &appv1.ListResourcesRequest{
-			Resource: &appv1.Resource{
-				Type: testType,
-			},
-			Metadata: &appv1.Metadata{
-				ProjectId: projectID(testProjectID),
-			},
-			Next: "",
+		var next string
+		var resources []*appv1.Resource
+		for {
+			req := &appv1.ListResourcesRequest{
+				Resource: &appv1.Resource{
+					Type: testType,
+				},
+				Metadata: &appv1.Metadata{
+					ProjectId: projectID(testProjectID),
+				},
+				Next: next,
+			}
+
+			res, err := runner.Client.ListResources(context.TODO(), connect.NewRequest(req))
+			if err != nil {
+				return fmt.Errorf("list resources: %w", err)
+			}
+
+			resources = append(resources, res.Msg.GetResources()...)
+
+			if res.Msg.Next == "" {
+				break
+			}
+
+			next = res.Msg.Next
 		}
 
-		// TODO: loop through pages
-		res, err := runner.Client.ListResources(context.TODO(), connect.NewRequest(req))
-		if err != nil {
-			return fmt.Errorf("list resources: %w", err)
-		}
+		cmd.Println("Resources: ")
+		for _, r := range resources {
+			j, err := json.MarshalIndent(r.Properties, "", "  ")
+			if err != nil {
+				return fmt.Errorf("marshal output: %w", err)
+			}
 
-		j, err := json.MarshalIndent(res.Msg.GetResources(), "", "  ")
-		if err != nil {
-			return fmt.Errorf("marshal resources: %w", err)
+			cmd.Println(string(j))
 		}
-
-		cmd.Printf("Resources: \n%s\n", string(j))
 	case "read":
 		if testExternalID == "" {
 			return fmt.Errorf("external ID (--external-id) is required for get operation.")
