@@ -190,15 +190,43 @@ func startPolling(cmd *cobra.Command, runner runner.Runner, waveClient *appapi.C
 					metadata.Owners = append(metadata.Owners, waveOwnerToAppOwner(owner))
 				}
 
+				environment := []*appv1.EnvironmentVariable{}
+				if v.EnvironmentVariables != nil {
+					for _, env := range *v.EnvironmentVariables {
+						var envType appv1.EnvironmentVariableType
+						switch env.Type {
+						case "variable":
+							envType = appv1.EnvironmentVariableType_ENVIRONMENT_VARIABLE_TYPE_VAR
+						case "secret":
+							envType = appv1.EnvironmentVariableType_ENVIRONMENT_VARIABLE_TYPE_SECRET
+						case "certificate":
+							envType = appv1.EnvironmentVariableType_ENVIRONMENT_VARIABLE_TYPE_CERTIFICATE
+						case "private_key":
+							envType = appv1.EnvironmentVariableType_ENVIRONMENT_VARIABLE_TYPE_PRIVATE_KEY
+						case "public_key":
+							envType = appv1.EnvironmentVariableType_ENVIRONMENT_VARIABLE_TYPE_PUBLIC_KEY
+						default:
+							envType = appv1.EnvironmentVariableType_ENVIRONMENT_VARIABLE_TYPE_UNSPECIFIED
+						}
+
+						environment = append(environment, &appv1.EnvironmentVariable{
+							Key:   env.Name,
+							Value: env.Value,
+							Type:  envType,
+						})
+					}
+				}
+
 				ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 				res, err := runner.Client.ExecuteResourceOperation(ctx, connect.NewRequest(&appv1.ExecuteResourceOperationRequest{
 					Resource: &appv1.Resource{
 						Type:       v.Resource.Type,
 						ExternalId: v.Resource.ExternalId,
 					},
-					Operation: op,
-					Input:     input,
-					Metadata:  metadata,
+					Operation:            op,
+					Input:                input,
+					Metadata:             metadata,
+					EnvironmentVariables: environment,
 				}))
 				cancel()
 				if err != nil {
