@@ -7,9 +7,9 @@ require (
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.9.0
-	github.com/tempestdx/openapi v0.1.1
-	github.com/tempestdx/protobuf v0.1.0
-	github.com/tempestdx/sdk-go v0.1.1
+	github.com/tempestdx/openapi v0.1.2
+	github.com/tempestdx/protobuf v0.1.1
+	github.com/tempestdx/sdk-go v0.1.2
 	github.com/zalando/go-keyring v0.2.6
 	google.golang.org/protobuf v1.35.1
 	gopkg.in/yaml.v3 v3.0.1
