@@ -10,16 +10,16 @@ require (
 	github.com/tempestdx/openapi v0.1.1
 	github.com/tempestdx/protobuf v0.1.0
 	github.com/tempestdx/sdk-go v0.1.1
-	github.com/zalando/go-keyring v0.2.5
+	github.com/zalando/go-keyring v0.2.6
 	google.golang.org/protobuf v1.35.1
 	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
-	github.com/alessio/shellescape v1.4.1 // indirect
+	al.essio.dev/pkg/shellescape v1.5.1 // indirect
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
-	github.com/danieljoos/wincred v1.2.1 // indirect
+	github.com/danieljoos/wincred v1.2.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/go-chi/chi/v5 v5.1.0 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
