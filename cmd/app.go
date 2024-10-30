@@ -16,5 +16,5 @@ var (
 func init() {
 	rootCmd.AddCommand(appCmd)
 
-	appCmd.Flags().BoolVar(&appPreserveBuildDir, "preserve-build-dir", false, "Preserve the existing build directory. Useful for debugging")
+	appCmd.PersistentFlags().BoolVar(&appPreserveBuildDir, "preserve-build-dir", false, "Preserve the existing build directory. Useful for debugging")
 }
