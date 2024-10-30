@@ -54,9 +54,11 @@ func describeApp(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("app %s:%s not found", id, version)
 	}
 
-	err = generateBuildDir(cfg, cfgDir)
-	if err != nil {
-		return fmt.Errorf("generate build dir: %w", err)
+	if !appPreserveBuildDir {
+		err := generateBuildDir(cfg, cfgDir)
+		if err != nil {
+			return fmt.Errorf("generate build dir: %w", err)
+		}
 	}
 
 	runners, cancel, err := runner.StartApps(context.TODO(), cfg, cfgDir)

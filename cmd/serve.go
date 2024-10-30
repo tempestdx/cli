@@ -75,9 +75,11 @@ func serveRunE(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = generateBuildDir(cfg, cfgDir)
-	if err != nil {
-		return fmt.Errorf("generate build dir: %w", err)
+	if !appPreserveBuildDir {
+		err := generateBuildDir(cfg, cfgDir)
+		if err != nil {
+			return fmt.Errorf("generate build dir: %w", err)
+		}
 	}
 
 	runners, cancel, err := runner.StartApps(context.TODO(), cfg, cfgDir)
