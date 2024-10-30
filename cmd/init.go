@@ -254,25 +254,25 @@ func generateBuildDir(cfg *config.TempestConfig, cfgPath string) error {
 	absBuildDir := filepath.Join(cfgPath, cfg.BuildDir)
 
 	if err := os.MkdirAll(absBuildDir, 0o755); err != nil {
-		return err
+		return fmt.Errorf("create build directory: %w", err)
 	}
 
 	// Symlink cfgPath/apps/ to the cfg.BuildDir/apps/ directory
 	err := os.Symlink(filepath.Join(cfgPath, "apps/"), filepath.Join(absBuildDir, "apps/"))
 	if err != nil {
 		if !os.IsExist(err) {
-			return err
+			return fmt.Errorf("symlink apps directory: %w", err)
 		}
 	}
 
 	f, err := fs.ReadFile(templatesFS, "templates/build/main.go_")
 	if err != nil {
-		return err
+		return fmt.Errorf("read main.go template: %w", err)
 	}
 
 	err = os.WriteFile(filepath.Join(absBuildDir, "main.go"), f, 0o644)
 	if err != nil {
-		return err
+		return fmt.Errorf("write main.go: %w", err)
 	}
 
 	// Remove go.mod if it exists
@@ -280,7 +280,7 @@ func generateBuildDir(cfg *config.TempestConfig, cfgPath string) error {
 	if _, err := os.Stat(goModPath); err == nil {
 		err := os.Remove(goModPath)
 		if err != nil {
-			return err
+			return fmt.Errorf("remove existing go.mod: %w", err)
 		}
 	}
 
@@ -289,7 +289,7 @@ func generateBuildDir(cfg *config.TempestConfig, cfgPath string) error {
 	if _, err := os.Stat(goSumPath); err == nil {
 		err := os.Remove(goSumPath)
 		if err != nil {
-			return err
+			return fmt.Errorf("remove existing go.sum: %w", err)
 		}
 	}
 
@@ -297,19 +297,19 @@ func generateBuildDir(cfg *config.TempestConfig, cfgPath string) error {
 	modInit.Dir = absBuildDir
 	err = modInit.Run()
 	if err != nil {
-		return err
+		return fmt.Errorf("go mod init: %w", err)
 	}
 
 	modTidy := exec.Command("go", "mod", "tidy")
 	modTidy.Dir = absBuildDir
 	err = modTidy.Run()
 	if err != nil {
-		return err
+		return fmt.Errorf("go mod tidy: %w", err)
 	}
 
 	err = os.WriteFile(filepath.Join(absBuildDir, "apps.go"), appsDotGoContent(cfg), 0o644)
 	if err != nil {
-		return err
+		return fmt.Errorf("write apps.go: %w", err)
 	}
 
 	return nil
