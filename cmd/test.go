@@ -66,19 +66,11 @@ func testRunE(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("app %s:%s not found in config", testAppID, testAppVersion)
 	}
 
-	runners, cancel, err := runner.StartApps(context.TODO(), cfg, cfgDir)
+	runner, cancel, err := runner.StartApp(context.Background(), cfg, cfgDir, testAppID, testAppVersion)
 	if err != nil {
-		return fmt.Errorf("start local app: %w", err)
+		return fmt.Errorf("start app: %w", err)
 	}
 	defer cancel()
-
-	var runner runner.Runner
-	for _, r := range runners {
-		if r.AppID == testAppID && r.Version == testAppVersion {
-			runner = r
-			break
-		}
-	}
 
 	des, err := runner.Client.Describe(context.TODO(), connect.NewRequest(&appv1.DescribeRequest{}))
 	if err != nil {

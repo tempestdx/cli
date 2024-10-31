@@ -61,19 +61,12 @@ func describeApp(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	runners, cancel, err := runner.StartApps(context.TODO(), cfg, cfgDir)
+	// Start the app runner
+	runner, cancel, err := runner.StartApp(context.Background(), cfg, cfgDir, id, version)
 	if err != nil {
-		return fmt.Errorf("start local app: %w", err)
+		return fmt.Errorf("start app: %w", err)
 	}
 	defer cancel()
-
-	var runner runner.Runner
-	for _, r := range runners {
-		if r.AppID == id && r.Version == version {
-			runner = r
-			break
-		}
-	}
 
 	res, err := runner.Client.Describe(context.TODO(), connect.NewRequest(&appv1.DescribeRequest{}))
 	if err != nil {
