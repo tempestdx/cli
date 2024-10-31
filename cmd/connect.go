@@ -64,7 +64,7 @@ func connectRunE(cmd *cobra.Command, args []string) error {
 	}
 
 	if !appPreserveBuildDir {
-		err := generateBuildDir(cfg, cfgDir)
+		err := generateBuildDir(cfg, cfgDir, id, version)
 		if err != nil {
 			return fmt.Errorf("generate build dir: %w", err)
 		}
