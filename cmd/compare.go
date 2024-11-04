@@ -32,6 +32,13 @@ type tableRecord struct {
 	colB      string
 }
 
+var emptyRecord = tableRecord{
+	resource:  " ",
+	operation: " ",
+	colA:      " ",
+	colB:      " ",
+}
+
 func compareRunE(cmd *cobra.Command, args []string) error {
 	app1Description, err := getAppVersionDescriptor(args[0])
 	if err != nil {
@@ -43,8 +50,8 @@ func compareRunE(cmd *cobra.Command, args []string) error {
 	}
 
 	var table string
-	table = "Resource | Operation | " + args[0] + " | " + args[1] + "\n"
-	table += "-------- | --------- | ------ | ------\n"
+	table = "| Resource | Operation | " + args[0] + " | " + args[1] + "\n"
+	table += "| -------- | -------- | -------- | -------- |\n"
 
 	tableRecords := make([]tableRecord, 0)
 	// processed app1 resources
@@ -56,9 +63,9 @@ func compareRunE(cmd *cobra.Command, args []string) error {
 			// if resource is not present in app2, then it is a removed resource
 			tableRecords = append(tableRecords, tableRecord{
 				resource: app1resource.Type,
-				colA:     boolToCheckmark(true) + " Resource supported",
-				colB:     boolToCheckmark(false) + " Resource support removed",
-			})
+				colA:     fmt.Sprintf("++ resource: %s", app1resource.Type),
+				colB:     fmt.Sprintf("-- resource: %s", app1resource.Type),
+			}, emptyRecord)
 			continue
 		}
 		tableRecords = append(tableRecords, tableRecord{
@@ -67,56 +74,91 @@ func compareRunE(cmd *cobra.Command, args []string) error {
 
 		// resource is present in both app1 and app2, so compare the operations
 		// create
-		tableRecords = append(tableRecords, compareResourceOperations(
+		tableRecords = append(tableRecords, compareOperations(
 			"create",
 			app1resource.CreateSupported,
 			app2resource.CreateSupported,
 			app1resource.CreateInputSchema,
 			app2resource.CreateInputSchema)...)
 		// read
-		tableRecords = append(tableRecords, compareResourceOperations(
+		tableRecords = append(tableRecords, compareOperations(
 			"read",
 			app1resource.ReadSupported,
 			app2resource.ReadSupported,
 			nil,
 			nil)...)
 		// update
-		tableRecords = append(tableRecords, compareResourceOperations(
+		tableRecords = append(tableRecords, compareOperations(
 			"update",
 			app1resource.UpdateSupported,
 			app2resource.UpdateSupported,
 			app1resource.UpdateInputSchema,
 			app2resource.UpdateInputSchema)...)
 		// delete
-		tableRecords = append(tableRecords, compareResourceOperations(
+		tableRecords = append(tableRecords, compareOperations(
 			"delete",
 			app1resource.DeleteSupported,
 			app2resource.DeleteSupported,
 			nil,
 			nil)...)
 		// list
-		tableRecords = append(tableRecords, compareResourceOperations(
+		tableRecords = append(tableRecords, compareOperations(
 			"list",
 			app1resource.ListSupported,
 			app2resource.ListSupported,
 			nil,
 			nil)...)
 		// healthcheck
-		tableRecords = append(tableRecords, compareResourceOperations(
+		tableRecords = append(tableRecords, compareOperations(
 			"healthcheck",
 			app1resource.HealthcheckSupported,
 			app2resource.HealthcheckSupported,
 			nil,
 			nil)...)
+		// actions
+		var processedApp1Actions []string
+		for _, action := range app1resource.Actions {
+			processedApp1Actions = append(processedApp1Actions, action.Name)
+			for _, app2action := range app2resource.Actions {
+				if action.Name == app2action.Name {
+					// action is present in both app1 and app2, so compare the operations
+					tableRecords = append(tableRecords, compareOperations(
+						action.Name,
+						true,
+						true,
+						action.InputSchema,
+						app2action.InputSchema)...)
+					break
+				}
+				if len(processedApp1Actions) == len(app1resource.Actions) {
+					// action is not present in app2, then it is a removed action
+					tableRecords = append(tableRecords, tableRecord{
+						operation: action.Name,
+						colA:      fmt.Sprintf("++ action: %s", action.Name),
+						colB:      fmt.Sprintf("-- action: %s", action.Name),
+					}, emptyRecord)
+				}
+			}
+		}
+		for _, app2action := range app2resource.Actions {
+			if !slices.Contains(processedApp1Actions, app2action.Name) {
+				// if action is not present in app1, then it is an added action
+				tableRecords = append(tableRecords, tableRecord{
+					operation: app2action.Name,
+					colA:      fmt.Sprintf("-- action: %s", app2action.Name),
+					colB:      fmt.Sprintf("++ action: %s", app2action.Name),
+				}, emptyRecord)
+			}
+		}
 	}
 	for _, app2resource := range app2Description.ResourceDefinitions {
 		if !slices.Contains(processedApp1Resources, app2resource.Type) {
 			// if resource is not present in app1, then it is an added resource
 			tableRecords = append(tableRecords, tableRecord{
 				resource: app2resource.Type,
-				colA:     boolToCheckmark(false) + " Resource not supported",
-				colB:     boolToCheckmark(true) + " Resource support added",
-			})
+				colA:     fmt.Sprintf("-- resource: %s", app2resource.Type),
+				colB:     fmt.Sprintf("++ resource: %s", app2resource.Type),
+			}, emptyRecord)
 		}
 	}
 
@@ -198,40 +240,43 @@ func lookupResourceByType(resources []*appv1.ResourceDefinition, resourceType st
 	return nil
 }
 
-func compareResourceOperations(operation string, app1ResSupport, app2ResSupport bool, app1ResSchema, app2ResSchema *structpb.Struct) []tableRecord {
+func compareOperations(operation string, app1Support, app2Support bool, app1Schema, app2Schema *structpb.Struct) []tableRecord {
 	switch {
-	case app1ResSupport && app2ResSupport:
+	case app1Support && app2Support:
 		// both app1 and app2 support operation
 		// compare the schemas
-		schemaDiffRecords := compareResourceSchemas(operation, app1ResSchema, app2ResSchema)
+		schemaDiffRecords := compareResourceSchemas(operation, app1Schema, app2Schema)
 		if len(schemaDiffRecords) > 0 {
+			schemaDiffRecords = append(schemaDiffRecords, emptyRecord)
 			// if there are schema differences, add the operation record
 			return append([]tableRecord{
 				{
 					operation: operation,
-					colB:      "Properties differ",
+					colA:      " Schema changed",
 				},
 			}, schemaDiffRecords...)
 		}
-	case app1ResSupport && !app2ResSupport:
+	case app1Support && !app2Support:
 		// app1 supports operation, but app2 does not
 		// print the removed operation
 		return []tableRecord{
 			{
 				operation: operation,
-				colA:      boolToCheckmark(true) + " Operation supported",
-				colB:      boolToCheckmark(false) + " Operation support removed",
+				colA:      fmt.Sprintf("++ operation: %s", operation),
+				colB:      fmt.Sprintf("-- operation: %s", operation),
 			},
+			emptyRecord,
 		}
-	case !app1ResSupport && app2ResSupport:
+	case !app1Support && app2Support:
 		// app2 supports operation, but app1 does not
 		// print the added operation
 		return []tableRecord{
 			{
 				operation: operation,
-				colA:      boolToCheckmark(false) + " Operation not supported",
-				colB:      boolToCheckmark(true) + " Operation support added",
+				colA:      fmt.Sprintf("-- operation: %s", operation),
+				colB:      fmt.Sprintf("++ operation: %s", operation),
 			},
+			emptyRecord,
 		}
 	}
 
@@ -277,8 +322,8 @@ func compareResourceSchemas(operation string, app1ResSchema, app2ResSchema *stru
 			// field is present in app1 schema but not in app2 schema
 			records = append(records, tableRecord{
 				operation: operation,
-				colA:      fmt.Sprintf("%s %s property", boolToCheckmark(true), k),
-				colB:      fmt.Sprintf("%s %s property", boolToCheckmark(false), k),
+				colA:      fmt.Sprintf("++ property: %s", k),
+				colB:      fmt.Sprintf("-- property: %s", k),
 			})
 		}
 	}
@@ -287,8 +332,8 @@ func compareResourceSchemas(operation string, app1ResSchema, app2ResSchema *stru
 			// field is present in app2 schema but not in app1 schema
 			records = append(records, tableRecord{
 				operation: operation,
-				colA:      fmt.Sprintf("%s %s property", boolToCheckmark(false), k),
-				colB:      fmt.Sprintf("%s %s property", boolToCheckmark(true), k),
+				colA:      fmt.Sprintf("-- property: %s", k),
+				colB:      fmt.Sprintf("++ property: %s", k),
 			})
 		}
 	}
