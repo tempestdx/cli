@@ -134,7 +134,14 @@ func compareRunE(cmd *cobra.Command, args []string) error {
 		glamour.WithAutoStyle(),
 		glamour.WithWordWrap(120),
 	)
+	if err != nil {
+		return fmt.Errorf("create renderer: %w", err)
+	}
+
 	out, err := renderer.Render(table)
+	if err != nil {
+		return fmt.Errorf("render table: %w", err)
+	}
 	cmd.Println(out)
 	return nil
 }
@@ -243,12 +250,24 @@ func compareResourceSchemas(operation string, app1ResSchema, app2ResSchema *stru
 	app1Properties := app1ResSchema.Fields["properties"].GetStructValue()
 	app2Properties := app2ResSchema.Fields["properties"].GetStructValue()
 
-	if app1Properties == nil && app2Properties == nil {
+	var (
+		colA string
+		colB string
+	)
+	if app1Properties == nil {
+		colA = "No properties"
+	}
+	if app2Properties == nil {
+		colB = "No properties"
+	}
+	if colA != "" || colB != "" {
+		// if one of the schemas is nil, then everything is different
 		records = append(records, tableRecord{
 			operation: operation,
-			colA:      "No properties",
-			colB:      "No properties",
+			colA:      colA,
+			colB:      colB,
 		})
+		return records
 	}
 
 	for k := range app1Properties.Fields {
