@@ -24,8 +24,7 @@ type Runner struct {
 	Version string
 }
 
-// Start the app runner and return clients for each service.
-// If path is provided, only that app client will be returned.
+// Start the app runner for all apps and return clients for each service.
 func StartApps(ctx context.Context, cfg *config.TempestConfig, cfgDir string) ([]Runner, func(), error) {
 	absBuildDir := filepath.Join(cfgDir, cfg.BuildDir)
 
@@ -95,6 +94,73 @@ func StartApps(ctx context.Context, cfg *config.TempestConfig, cfgDir string) ([
 	}
 
 	return runners, cancel, nil
+}
+
+// StartApp starts a single app runner and returns a client for the service.
+func StartApp(ctx context.Context, cfg *config.TempestConfig, cfgDir, appID, version string) (Runner, func(), error) {
+	absBuildDir := filepath.Join(cfgDir, cfg.BuildDir)
+
+	var cmd *exec.Cmd
+	info, err := os.Stat(absBuildDir)
+	if err != nil {
+		return Runner{}, nil, err
+	}
+	if info.IsDir() {
+		cmd = exec.Command("go", "run", ".")
+		cmd.Dir = absBuildDir
+	} else {
+		return Runner{}, nil, fmt.Errorf("invalid build directory: %s", absBuildDir)
+	}
+
+	// Start process
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return Runner{}, nil, err
+	}
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return Runner{}, nil, err
+	}
+	err = cmd.Start()
+	if err != nil {
+		return Runner{}, nil, err
+	}
+
+	go func() {
+		scanner := bufio.NewScanner(stderr)
+		for scanner.Scan() {
+			fmt.Println("App logged to stderr", "line", scanner.Text())
+		}
+	}()
+
+	scanner := bufio.NewScanner(stdout)
+	if !scanner.Scan() {
+		return Runner{}, nil, fmt.Errorf("scan: %w", scanner.Err())
+	}
+
+	port := scanner.Text()
+
+	go func() {
+		for scanner.Scan() {
+			fmt.Println("App logged to stdout", "line", scanner.Text())
+		}
+	}()
+
+	av := cfg.LookupAppByVersion(appID, version)
+
+	runner, err := createRunner(ctx, appID, av, port)
+	if err != nil {
+		return Runner{}, nil, err
+	}
+
+	cancel := func() {
+		err = cmd.Process.Kill()
+		if err != nil {
+			fmt.Println("failed to kill app", "error", err)
+		}
+	}
+
+	return runner, cancel, nil
 }
 
 func createRunner(ctx context.Context, appID string, version *config.AppVersion, port string) (Runner, error) {

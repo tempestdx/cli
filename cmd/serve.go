@@ -75,16 +75,12 @@ func serveRunE(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = generateBuildDir(cfg, cfgDir)
-	if err != nil {
-		return fmt.Errorf("generate build dir: %w", err)
+	if !appPreserveBuildDir {
+		err := generateBuildDir(cfg, cfgDir, id, version)
+		if err != nil {
+			return fmt.Errorf("generate build dir: %w", err)
+		}
 	}
-
-	runners, cancel, err := runner.StartApps(context.TODO(), cfg, cfgDir)
-	if err != nil {
-		return fmt.Errorf("start local app: %w", err)
-	}
-	defer cancel()
 
 	waveClient, err := appapi.NewClientWithResponses(
 		apiEndpoint,
@@ -98,17 +94,21 @@ func serveRunE(cmd *cobra.Command, args []string) error {
 	}
 
 	if id != "" && version != "" {
-		var runner runner.Runner
-		for _, r := range runners {
-			if r.AppID == id && r.Version == version {
-				runner = r
-				break
-			}
+		runner, cancel, err := runner.StartApp(context.TODO(), cfg, cfgDir, id, version)
+		if err != nil {
+			return fmt.Errorf("start local app: %w", err)
 		}
+		defer cancel()
 
 		go startHealthCheck(cmd, runner, waveClient, appServeHealthcheckInterval)
 		go startPolling(cmd, runner, waveClient)
 	} else {
+		runners, cancel, err := runner.StartApps(context.TODO(), cfg, cfgDir)
+		if err != nil {
+			return fmt.Errorf("start local app: %w", err)
+		}
+		defer cancel()
+
 		for _, runner := range runners {
 			go startHealthCheck(cmd, runner, waveClient, appServeHealthcheckInterval)
 			go startPolling(cmd, runner, waveClient)

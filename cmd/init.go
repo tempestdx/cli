@@ -179,7 +179,7 @@ Location: %s
 	}
 
 	// Generate the .build directory
-	err = generateBuildDir(cfg, cfgPath)
+	err = generateBuildDir(cfg, cfgPath, "", "")
 	if err != nil {
 		return err
 	}
@@ -250,29 +250,29 @@ func generateGitIgnore(cfgPath string) error {
 	return nil
 }
 
-func generateBuildDir(cfg *config.TempestConfig, cfgPath string) error {
+func generateBuildDir(cfg *config.TempestConfig, cfgPath, appID, version string) error {
 	absBuildDir := filepath.Join(cfgPath, cfg.BuildDir)
 
 	if err := os.MkdirAll(absBuildDir, 0o755); err != nil {
-		return err
+		return fmt.Errorf("create build directory: %w", err)
 	}
 
 	// Symlink cfgPath/apps/ to the cfg.BuildDir/apps/ directory
 	err := os.Symlink(filepath.Join(cfgPath, "apps/"), filepath.Join(absBuildDir, "apps/"))
 	if err != nil {
 		if !os.IsExist(err) {
-			return err
+			return fmt.Errorf("symlink apps directory: %w", err)
 		}
 	}
 
 	f, err := fs.ReadFile(templatesFS, "templates/build/main.go_")
 	if err != nil {
-		return err
+		return fmt.Errorf("read main.go template: %w", err)
 	}
 
 	err = os.WriteFile(filepath.Join(absBuildDir, "main.go"), f, 0o644)
 	if err != nil {
-		return err
+		return fmt.Errorf("write main.go: %w", err)
 	}
 
 	// Remove go.mod if it exists
@@ -280,7 +280,7 @@ func generateBuildDir(cfg *config.TempestConfig, cfgPath string) error {
 	if _, err := os.Stat(goModPath); err == nil {
 		err := os.Remove(goModPath)
 		if err != nil {
-			return err
+			return fmt.Errorf("remove existing go.mod: %w", err)
 		}
 	}
 
@@ -289,7 +289,7 @@ func generateBuildDir(cfg *config.TempestConfig, cfgPath string) error {
 	if _, err := os.Stat(goSumPath); err == nil {
 		err := os.Remove(goSumPath)
 		if err != nil {
-			return err
+			return fmt.Errorf("remove existing go.sum: %w", err)
 		}
 	}
 
@@ -297,47 +297,66 @@ func generateBuildDir(cfg *config.TempestConfig, cfgPath string) error {
 	modInit.Dir = absBuildDir
 	err = modInit.Run()
 	if err != nil {
-		return err
+		return fmt.Errorf("go mod init: %w", err)
 	}
 
 	modTidy := exec.Command("go", "mod", "tidy")
 	modTidy.Dir = absBuildDir
 	err = modTidy.Run()
 	if err != nil {
-		return err
+		return fmt.Errorf("go mod tidy: %w", err)
 	}
 
-	err = os.WriteFile(filepath.Join(absBuildDir, "apps.go"), appsDotGoContent(cfg), 0o644)
+	err = os.WriteFile(filepath.Join(absBuildDir, "apps.go"), appsDotGoContent(cfg, appID, version), 0o644)
 	if err != nil {
-		return err
+		return fmt.Errorf("write apps.go: %w", err)
 	}
 
 	return nil
 }
 
-func appsDotGoContent(cfg *config.TempestConfig) []byte {
+func appsDotGoContent(cfg *config.TempestConfig, appID, version string) []byte {
+	var av *config.AppVersion
+	if appID != "" && version != "" {
+		av = cfg.LookupAppByVersion(appID, version)
+	}
+
 	s := strings.Builder{}
 
 	// Write the package and imports.
 	s.WriteString("package main\n\n")
-	for appID, versions := range cfg.Apps {
-		for _, version := range versions {
-			s.WriteString(fmt.Sprintf("import %s \"%s\"\n", sanitizeAppID(appID)+version.Version, "tempestappserver/"+version.Path))
+	if av == nil {
+		// load and run all of the apps
+		for appID, versions := range cfg.Apps {
+			for _, version := range versions {
+				s.WriteString(fmt.Sprintf("import %s \"%s\"\n", sanitizeAppID(appID)+version.Version, "tempestappserver/"+version.Path))
+			}
 		}
+	} else {
+		s.WriteString(fmt.Sprintf("import %s \"%s\"\n", sanitizeAppID(appID)+version, "tempestappserver/"+av.Path))
 	}
 
 	s.WriteString("\n")
 
 	s.WriteString("func (s *AppServer) RegisterApps() {\n")
-	for appID, versions := range cfg.Apps {
-		for _, version := range versions {
-			s.WriteString("\ts.apps = append(s.apps, &appHandler{\n")
-			s.WriteString(fmt.Sprintf("\t\ta:   %s.App(),\n", sanitizeAppID(appID)+version.Version))
-			s.WriteString(fmt.Sprintf("\t\tappID: \"%s\",\n", appID))
-			s.WriteString(fmt.Sprintf("\t\tversion: \"%s\",\n", version.Version))
-			s.WriteString("\t})\n")
+	if av == nil {
+		for appID, versions := range cfg.Apps {
+			for _, version := range versions {
+				s.WriteString("\ts.apps = append(s.apps, &appHandler{\n")
+				s.WriteString(fmt.Sprintf("\t\ta:   %s.App(),\n", sanitizeAppID(appID)+version.Version))
+				s.WriteString(fmt.Sprintf("\t\tappID: \"%s\",\n", appID))
+				s.WriteString(fmt.Sprintf("\t\tversion: \"%s\",\n", version.Version))
+				s.WriteString("\t})\n")
+			}
 		}
+	} else {
+		s.WriteString("\ts.apps = append(s.apps, &appHandler{\n")
+		s.WriteString(fmt.Sprintf("\t\ta:   %s.App(),\n", sanitizeAppID(appID)+version))
+		s.WriteString(fmt.Sprintf("\t\tappID: \"%s\",\n", appID))
+		s.WriteString(fmt.Sprintf("\t\tversion: \"%s\",\n", version))
+		s.WriteString("\t})\n")
 	}
+
 	s.WriteString("}")
 
 	return []byte(s.String())
