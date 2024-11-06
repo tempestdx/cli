@@ -97,7 +97,7 @@ func StartApps(ctx context.Context, cfg *config.TempestConfig, cfgDir string) ([
 }
 
 // StartApp starts a single app runner and returns a client for the service.
-func StartApp(ctx context.Context, cfg *config.TempestConfig, cfgDir, appID, version string) (Runner, func(), error) {
+func StartApp(ctx context.Context, cfg *config.TempestConfig, cfgDir, appID string, appVersion *config.AppVersion) (Runner, func(), error) {
 	absBuildDir := filepath.Join(cfgDir, cfg.BuildDir)
 
 	var cmd *exec.Cmd
@@ -146,9 +146,7 @@ func StartApp(ctx context.Context, cfg *config.TempestConfig, cfgDir, appID, ver
 		}
 	}()
 
-	av := cfg.LookupAppByVersion(appID, version)
-
-	runner, err := createRunner(ctx, appID, av, port)
+	runner, err := createRunner(ctx, appID, appVersion, port)
 	if err != nil {
 		return Runner{}, nil, err
 	}

@@ -14,6 +14,7 @@ import (
 	"github.com/tempestdx/cli/internal/config"
 	"github.com/tempestdx/cli/internal/runner"
 	appv1 "github.com/tempestdx/protobuf/gen/go/tempestdx/app/v1"
+	"github.com/tidwall/pretty"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -51,7 +52,7 @@ func init() {
 }
 
 func testRunE(cmd *cobra.Command, args []string) error {
-	testAppID, testAppVersion, err := splitAppVersion(args[0])
+	id, version, err := splitAppVersion(args[0])
 	if err != nil {
 		return err
 	}
@@ -61,12 +62,19 @@ func testRunE(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("read config: %w", err)
 	}
 
-	appVersion := cfg.LookupAppByVersion(testAppID, testAppVersion)
+	appVersion := cfg.LookupAppByVersion(id, version)
 	if appVersion == nil {
-		return fmt.Errorf("app %s:%s not found in config", testAppID, testAppVersion)
+		return fmt.Errorf("app version %s:%s not found in config", id, version)
 	}
 
-	runner, cancel, err := runner.StartApp(context.Background(), cfg, cfgDir, testAppID, testAppVersion)
+	if !appPreserveBuildDir {
+		err := generateBuildDir(cfg, cfgDir, id, version)
+		if err != nil {
+			return fmt.Errorf("generate build dir: %w", err)
+		}
+	}
+
+	runner, cancel, err := runner.StartApp(context.Background(), cfg, cfgDir, id, appVersion)
 	if err != nil {
 		return fmt.Errorf("start app: %w", err)
 	}
@@ -146,13 +154,13 @@ func testRunE(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("execute resource operation: %w", err)
 		}
 
-		cmd.Println("Resource created with ID: ", res.Msg.Resource.GetExternalId())
+		cmd.Println("\nResource created with ID:", res.Msg.Resource.GetExternalId())
 
 		j, err := json.MarshalIndent(res.Msg.Resource.Properties, "", "  ")
 		if err != nil {
 			return fmt.Errorf("marshal output: %w", err)
 		}
-		cmd.Printf("Properties: \n%s\n", string(j))
+		cmd.Printf("Properties:\n%s\n", pretty.Color(j, nil))
 
 	case "update":
 		if testExternalID == "" {
@@ -191,13 +199,13 @@ func testRunE(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("execute resource operation: %w", err)
 		}
 
-		cmd.Println("Resource updated with ID: ", res.Msg.Resource.GetExternalId())
+		cmd.Println("\nResource updated with ID:", res.Msg.Resource.GetExternalId())
 
 		j, err := json.MarshalIndent(res.Msg.Resource.Properties, "", "  ")
 		if err != nil {
 			return fmt.Errorf("marshal output: %w", err)
 		}
-		cmd.Printf("Properties: \n%s\n", string(j))
+		cmd.Printf("Properties:\n%s\n", pretty.Color(j, nil))
 
 	case "delete":
 		if testExternalID == "" {
@@ -218,7 +226,7 @@ func testRunE(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("execute resource operation: %w", err)
 		}
 
-		cmd.Println("Resource deleted with ID: ", res.Msg.Resource.GetExternalId())
+		cmd.Println("Resource deleted with ID:", res.Msg.Resource.GetExternalId())
 
 	case "list":
 		var next string
@@ -248,14 +256,15 @@ func testRunE(cmd *cobra.Command, args []string) error {
 			next = res.Msg.Next
 		}
 
-		cmd.Println("Resources: ")
+		cmd.Println("Resources:")
 		for _, r := range resources {
 			j, err := json.MarshalIndent(r.Properties, "", "  ")
 			if err != nil {
 				return fmt.Errorf("marshal output: %w", err)
 			}
 
-			cmd.Println(string(j))
+			cmd.Println("\nExternal ID:", r.GetExternalId())
+			cmd.Printf("Properties:\n%s\n", pretty.Color(j, nil))
 		}
 	case "read":
 		if testExternalID == "" {
@@ -283,7 +292,8 @@ func testRunE(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("marshal resource properties: %w", err)
 		}
 
-		cmd.Printf("Resource: \n%s\n", string(j))
+		cmd.Println("\nResource:", res.Msg.Resource.GetExternalId())
+		cmd.Printf("Properties:\n%s\n", pretty.Color(j, nil))
 	}
 
 	return nil

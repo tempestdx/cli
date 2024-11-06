@@ -11,6 +11,7 @@ require (
 	github.com/tempestdx/openapi v0.1.2
 	github.com/tempestdx/protobuf v0.1.1
 	github.com/tempestdx/sdk-go v0.1.2
+	github.com/tidwall/pretty v1.2.1
 	github.com/zalando/go-keyring v0.2.6
 	google.golang.org/protobuf v1.35.1
 	gopkg.in/yaml.v3 v3.0.1
