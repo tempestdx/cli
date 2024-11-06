@@ -62,7 +62,7 @@ func describeApp(cmd *cobra.Command, args []string) error {
 	}
 
 	// Start the app runner
-	runner, cancel, err := runner.StartApp(context.Background(), cfg, cfgDir, id, version)
+	runner, cancel, err := runner.StartApp(context.Background(), cfg, cfgDir, id, appVersion)
 	if err != nil {
 		return fmt.Errorf("start app: %w", err)
 	}

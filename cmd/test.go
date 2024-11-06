@@ -52,7 +52,7 @@ func init() {
 }
 
 func testRunE(cmd *cobra.Command, args []string) error {
-	testAppID, testAppVersion, err := splitAppVersion(args[0])
+	id, version, err := splitAppVersion(args[0])
 	if err != nil {
 		return err
 	}
@@ -62,12 +62,19 @@ func testRunE(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("read config: %w", err)
 	}
 
-	appVersion := cfg.LookupAppByVersion(testAppID, testAppVersion)
+	appVersion := cfg.LookupAppByVersion(id, version)
 	if appVersion == nil {
-		return fmt.Errorf("app %s:%s not found in config", testAppID, testAppVersion)
+		return fmt.Errorf("app version %s:%s not found in config", id, version)
 	}
 
-	runner, cancel, err := runner.StartApp(context.Background(), cfg, cfgDir, testAppID, testAppVersion)
+	if !appPreserveBuildDir {
+		err := generateBuildDir(cfg, cfgDir, id, version)
+		if err != nil {
+			return fmt.Errorf("generate build dir: %w", err)
+		}
+	}
+
+	runner, cancel, err := runner.StartApp(context.Background(), cfg, cfgDir, id, appVersion)
 	if err != nil {
 		return fmt.Errorf("start app: %w", err)
 	}

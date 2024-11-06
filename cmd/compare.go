@@ -211,7 +211,7 @@ func getAppVersionDescriptor(appNameVersion string) (*appv1.DescribeResponse, er
 		}
 	}
 
-	runner, cancel, err := runner.StartApp(context.TODO(), cfg, cfgDir, id, version)
+	runner, cancel, err := runner.StartApp(context.TODO(), cfg, cfgDir, id, appVersion)
 	if err != nil {
 		return nil, fmt.Errorf("start local app: %w", err)
 	}

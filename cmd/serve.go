@@ -75,13 +75,6 @@ func serveRunE(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if !appPreserveBuildDir {
-		err := generateBuildDir(cfg, cfgDir, id, version)
-		if err != nil {
-			return fmt.Errorf("generate build dir: %w", err)
-		}
-	}
-
 	waveClient, err := appapi.NewClientWithResponses(
 		apiEndpoint,
 		appapi.WithHTTPClient(&http.Client{
@@ -94,7 +87,19 @@ func serveRunE(cmd *cobra.Command, args []string) error {
 	}
 
 	if id != "" && version != "" {
-		runner, cancel, err := runner.StartApp(context.TODO(), cfg, cfgDir, id, version)
+		appVersion := cfg.LookupAppByVersion(id, version)
+		if appVersion == nil {
+			return fmt.Errorf("app version %s:%s not found in config", id, version)
+		}
+
+		if !appPreserveBuildDir {
+			err := generateBuildDir(cfg, cfgDir, id, version)
+			if err != nil {
+				return fmt.Errorf("generate build dir: %w", err)
+			}
+		}
+
+		runner, cancel, err := runner.StartApp(context.TODO(), cfg, cfgDir, id, appVersion)
 		if err != nil {
 			return fmt.Errorf("start local app: %w", err)
 		}
@@ -103,6 +108,13 @@ func serveRunE(cmd *cobra.Command, args []string) error {
 		go startHealthCheck(cmd, runner, waveClient, appServeHealthcheckInterval)
 		go startPolling(cmd, runner, waveClient)
 	} else {
+		if !appPreserveBuildDir {
+			err := generateBuildDir(cfg, cfgDir, id, version)
+			if err != nil {
+				return fmt.Errorf("generate build dir: %w", err)
+			}
+		}
+
 		runners, cancel, err := runner.StartApps(context.TODO(), cfg, cfgDir)
 		if err != nil {
 			return fmt.Errorf("start local app: %w", err)
