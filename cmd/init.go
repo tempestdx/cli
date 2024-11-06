@@ -275,6 +275,11 @@ func generateBuildDir(cfg *config.TempestConfig, cfgPath, appID, version string)
 		return fmt.Errorf("write main.go: %w", err)
 	}
 
+	err = os.WriteFile(filepath.Join(absBuildDir, "apps.go"), appsDotGoContent(cfg, appID, version), 0o644)
+	if err != nil {
+		return fmt.Errorf("write apps.go: %w", err)
+	}
+
 	// Remove go.mod if it exists
 	goModPath := filepath.Join(absBuildDir, "go.mod")
 	if _, err := os.Stat(goModPath); err == nil {
@@ -305,11 +310,6 @@ func generateBuildDir(cfg *config.TempestConfig, cfgPath, appID, version string)
 	err = modTidy.Run()
 	if err != nil {
 		return fmt.Errorf("go mod tidy: %w", err)
-	}
-
-	err = os.WriteFile(filepath.Join(absBuildDir, "apps.go"), appsDotGoContent(cfg, appID, version), 0o644)
-	if err != nil {
-		return fmt.Errorf("write apps.go: %w", err)
 	}
 
 	return nil
