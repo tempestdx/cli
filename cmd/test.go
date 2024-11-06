@@ -256,7 +256,7 @@ func testRunE(cmd *cobra.Command, args []string) error {
 				return fmt.Errorf("marshal output: %w", err)
 			}
 
-			cmd.Println("External ID:", r.GetExternalId())
+			cmd.Println("\nExternal ID:", r.GetExternalId())
 			cmd.Printf("Properties:\n%s\n", pretty.Color(j, nil))
 		}
 	case "read":
