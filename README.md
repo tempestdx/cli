@@ -11,7 +11,7 @@ The official [Tempest][tempest] CLI client.
 
 ## Installation
 
-You can installs the Tempest CLI, scaffolds an app locally, and displays
+You can install the Tempest CLI, scaffold an app locally, and display its
 configuration details in a few simple steps.
 
 ```sh
@@ -23,25 +23,24 @@ mkdir tempest && cd tempest
 tempest app init <name>
 ```
 
-For more information on how to use the Tempest CLI, check out the
+For more information on how to use the Tempest CLI, see our
 [Quick Start][quick-start] guide.
 
 ## Documentation
 
-For documentation on all available commands, check out the
+For documentation on all available commands, see our
 [CLI documentation][cli-docs].
 
-For details on all the functionality in this client, see the
+For details on all the functionality in this client, see our
 [Go documentation][goref].
 
 ## Support
 
-New features and bug fixes are released on the latest major version of the
-Tempest CLI client library. If you are on an older major version, we recommend
-that you upgrade to the latest in order to use the new features and bug fixes
-including those for security vulnerabilities. Older major versions of the
-package will continue to be available for use, but will not be receiving any
-updates.
+New features and bug fixes are released on the latest version of the Tempest CLI
+client. If you're using an older major version, we recommend updating to the
+latest version to access new features, benefit from recent bug fixes, and ensure
+you have the latest security patches. Older major versions of the client will
+continue to be available for use, but will not be receive any further updates.
 
 ## Development
 
@@ -58,7 +57,7 @@ The test suite needs testify's `require` package to run:
 
     github.com/stretchr/testify/require
 
-Before running the tests, make sure to grab all of the package's dependencies:
+Before running any tests, make sure to grab all of the package's dependencies:
 
     go get -t -v ./...
 
@@ -74,7 +73,7 @@ Run a single test:
 
     go test -v ./internal/... -run TestReadConfigSuccess
 
-For any requests, bug or comments, please [open an issue][issues] or
+To share any requests, bugs or comments, please [open an issue][issues] or
 [submit a pull request][pulls].
 
 [cli-docs]: https://docs.tempestdx.com/developer/cli/tempest
