@@ -11,8 +11,8 @@ The official [Tempest][tempest] CLI client.
 
 ## Installation
 
-The quick start installs the Tempest CLI, scaffolds an app locally, and displays
-configuration details
+You can installs the Tempest CLI, scaffolds an app locally, and displays
+configuration details in a few simple steps.
 
 ```sh
 # Install the Tempest CLI
@@ -23,10 +23,13 @@ mkdir tempest && cd tempest
 tempest app init <name>
 ```
 
+For more information on how to use the Tempest CLI, check out the
+[Quick Start][quick-start] guide.
+
 ## Documentation
 
 For documentation on all available commands, check out the
-[API documentation][api-docs].
+[CLI documentation][cli-docs].
 
 For details on all the functionality in this client, see the
 [Go documentation][goref].
@@ -74,8 +77,9 @@ Run a single test:
 For any requests, bug or comments, please [open an issue][issues] or
 [submit a pull request][pulls].
 
-[api-docs]: https://docs.tempestdx.com/developer/cli/tempest
+[cli-docs]: https://docs.tempestdx.com/developer/cli/tempest
 [goref]: https://pkg.go.dev/github.com/tempestdx/cli
 [issues]: https://github.com/tempestdx/cli/issues/new
 [pulls]: https://github.com/tempestdx/cli/pulls
 [tempest]: https://tempestdx.com/
+[quick-start]: https://docs.tempestdx.com/developer/
