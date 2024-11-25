@@ -7,7 +7,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/charmbracelet/glamour v0.8.0
 	github.com/spf13/cobra v1.8.1
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	github.com/tempestdx/openapi v0.1.2
 	github.com/tempestdx/protobuf v0.1.1
 	github.com/tempestdx/sdk-go v0.1.2
