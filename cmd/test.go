@@ -19,13 +19,14 @@ import (
 )
 
 var (
-	testOperation        string
-	testInput            string
-	testType             string
-	testParentExternalId string
-	testExternalID       string
-	testDatasourceInput  string
-	testProjectID        string
+	testOperation            string
+	testInput                string
+	testType                 string
+	testParentExternalId     string
+	testExternalID           string
+	testDatasourceInput      string
+	testProjectID            string
+	testEnvironmentVariables []string
 
 	testCmd = &cobra.Command{
 		Use:           "test <app-id>:<app-version>",
@@ -44,6 +45,7 @@ func init() {
 	testCmd.Flags().StringVarP(&testType, "type", "t", "", "(REQUIRED) The type of the resource to test.")
 
 	testCmd.Flags().StringVarP(&testInput, "input", "i", "", "The input to the operation. JSON formatted input options to the operation.")
+	testCmd.Flags().StringArrayVar(&testEnvironmentVariables, "env", nil, "Environment variables to set for the operation. Format: KEY=VALUE.")
 	testCmd.Flags().StringVarP(&testParentExternalId, "parent-external-id", "p", "", "The external ID of the parent resource. Only required when testing sub-resources.")
 	testCmd.Flags().StringVarP(&testExternalID, "external-id", "e", "", "The external ID of the resource to test. Only required when testing 'update', 'delete', or 'read' operations.")
 
@@ -121,6 +123,20 @@ func testRunE(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("operation %s not found for type %s. Supported operations: %s", testOperation, testType, strings.Join(typesToOperations[testType], ", "))
 	}
 
+	ev := make([]*appv1.EnvironmentVariable, 0, len(testEnvironmentVariables))
+	for _, e := range testEnvironmentVariables {
+		k, v, ok := strings.Cut(e, "=")
+		if !ok {
+			return fmt.Errorf("invalid environment variable: %s", e)
+		}
+
+		ev = append(ev, &appv1.EnvironmentVariable{
+			Key:   k,
+			Value: v,
+			Type:  appv1.EnvironmentVariableType_ENVIRONMENT_VARIABLE_TYPE_VAR,
+		})
+	}
+
 	switch testOperation {
 	case "create":
 		req := &appv1.ExecuteResourceOperationRequest{
@@ -131,6 +147,7 @@ func testRunE(cmd *cobra.Command, args []string) error {
 			Metadata: &appv1.Metadata{
 				ProjectId: projectID(testProjectID),
 			},
+			EnvironmentVariables: ev,
 		}
 
 		if testInput != "" {
@@ -176,6 +193,7 @@ func testRunE(cmd *cobra.Command, args []string) error {
 			Metadata: &appv1.Metadata{
 				ProjectId: projectID(testProjectID),
 			},
+			EnvironmentVariables: ev,
 		}
 
 		if testInput != "" {
@@ -221,6 +239,7 @@ func testRunE(cmd *cobra.Command, args []string) error {
 			Metadata: &appv1.Metadata{
 				ProjectId: projectID(testProjectID),
 			},
+			EnvironmentVariables: ev,
 		}))
 		if err != nil {
 			return fmt.Errorf("execute resource operation: %w", err)
@@ -280,6 +299,7 @@ func testRunE(cmd *cobra.Command, args []string) error {
 			Metadata: &appv1.Metadata{
 				ProjectId: projectID(testProjectID),
 			},
+			EnvironmentVariables: ev,
 		}
 
 		res, err := runner.Client.ExecuteResourceOperation(context.TODO(), connect.NewRequest(req))
