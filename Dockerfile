@@ -11,3 +11,5 @@ FROM alpine:3.20.3
 USER nobody
 
 COPY --from=builder /go/bin/tempest /usr/local/bin/tempest
+
+ENTRYPOINT ["tempest"]
