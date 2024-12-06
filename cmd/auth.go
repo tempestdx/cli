@@ -53,18 +53,13 @@ func init() {
 }
 
 func authShowRunE(cmd *cobra.Command, args []string) error {
-	tokenEnv := os.Getenv("TEMPEST_TOKEN")
-
 	token, err := tokenStore.Get()
 	if err != nil && !errors.Is(err, keyring.ErrNotFound) {
 		return err
 	}
 
-	if token == "" {
-		return errors.New("No token found. Please login with 'tempest auth login' or set the TEMPEST_TOKEN environment variable")
-	}
-
-	cmd.Println(fmt.Sprintf(`TEMPEST_TOKEN="%s"`, tokenEnv))
+	cmd.Println(fmt.Sprintf(`TEMPEST_TOKEN="%s"`, os.Getenv("TEMPEST_TOKEN")))
+	cmd.Println(fmt.Sprintf(`TEMPEST_TOKEN_FILE="%s"`, os.Getenv("TEMPEST_TOKEN_FILE")))
 	cmd.Println(fmt.Sprintf("Token from keychain: %s", token))
 
 	return nil
