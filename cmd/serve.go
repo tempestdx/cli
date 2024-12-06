@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -18,7 +17,6 @@ import (
 	appapi "github.com/tempestdx/openapi/app"
 	appv1 "github.com/tempestdx/protobuf/gen/go/tempestdx/app/v1"
 	appv1connect "github.com/tempestdx/protobuf/gen/go/tempestdx/app/v1/appv1connect"
-	"github.com/zalando/go-keyring"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -29,7 +27,6 @@ const (
 
 var (
 	appServeHealthcheckInterval time.Duration
-	token                       string
 
 	serveCmd = &cobra.Command{
 		Use:   "serve [<app-id>:<app-version>]",
@@ -58,17 +55,7 @@ func serveRunE(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	token = os.Getenv("TEMPEST_TOKEN")
-	if token == "" {
-		var err error
-		token, err = tokenStore.Get()
-		if err != nil {
-			if errors.Is(err, keyring.ErrNotFound) {
-				return fmt.Errorf("token not found. Please login with 'tempest auth login' or set the TEMPEST_TOKEN environment variable")
-			}
-			return fmt.Errorf("get token: %w", err)
-		}
-	}
+	token := loadTempestToken(cmd)
 
 	cfg, cfgDir, err := config.ReadConfig()
 	if err != nil {

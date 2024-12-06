@@ -54,3 +54,28 @@ func init() {
 
 	tokenStore = &secret.Keyring{}
 }
+
+// loadTempestToken loads the Tempest token from the environment or the keyring.
+// Load order: TEMPEST_TOKEN_FILE, TEMPEST_TOKEN, keyring.
+func loadTempestToken(cmd *cobra.Command) string {
+	if t := os.Getenv("TEMPEST_TOKEN_FILE"); t != "" {
+		b, err := os.ReadFile(t)
+		if err != nil {
+			cmd.PrintErrf("read token file: %v\n", err)
+			os.Exit(1)
+		}
+		return string(b)
+	}
+
+	if t := os.Getenv("TEMPEST_TOKEN"); t != "" {
+		return t
+	}
+
+	t, err := tokenStore.Get()
+	if err != nil {
+		cmd.PrintErrf("get token: %v\n", err)
+		os.Exit(1)
+	}
+
+	return t
+}
