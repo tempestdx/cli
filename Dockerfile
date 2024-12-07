@@ -6,7 +6,7 @@ COPY . .
 RUN go mod download && \
     go build -o /go/bin/tempest tempest/main.go
 
-FROM alpine:3.20.3
+FROM alpine:3.21.0
 
 USER nobody
 
