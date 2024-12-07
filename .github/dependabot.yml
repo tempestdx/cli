@@ -2,13 +2,13 @@ version: 2
 updates:
   - package-ecosystem: "gomod"
     directory: "/"
+    schedule:
+      interval: "daily"
     groups:
       all:
         update-types:
           - "minor"
           - "patch"
-    schedule:
-      interval: "daily"
     open-pull-requests-limit: 10
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -19,3 +19,7 @@ updates:
         update-types:
           - "minor"
           - "patch"
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "daily"
