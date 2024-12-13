@@ -175,12 +175,12 @@ func waitforYesNo() bool {
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
-		fmt.Print("(y/n): ")
+		fmt.Print("(Y/n): ")
 		input, _ := reader.ReadString('\n')
 		input = strings.TrimSpace(input)
 
 		switch input {
-		case "y", "Y":
+		case "y", "Y", "":
 			return true
 		case "n", "N":
 			return false

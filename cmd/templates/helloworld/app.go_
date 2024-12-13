@@ -2,36 +2,65 @@ package {{ .PackageName }}
 
 import (
 	"context"
+	_ "embed"
 	"strconv"
 	"time"
 
+	// Our SDK that defines interface between your app and Tempest.
 	"github.com/tempestdx/sdk-go/app"
 )
 
+// Embedding the schema files into the binary isn't necessary
+// but it makes it easier to distribute the app as a single binary
+// and keeps the codebase clean.
+var (
+	//go:embed properties_schema.json
+	propertiesSchema []byte
+	//go:embed create_schema.json
+	createSchema []byte
+)
+
+// Tempest Apps operate on Resources. Good example of a resource would be
+// VM instance or cloud storage bucket. But in reality what it represents
+// is limited only by your imagination.
 var resourceDefinition = app.ResourceDefinition{
 	Type:             "example",
 	DisplayName:      "Example Resource",
 	LifecycleStage:   app.LifecycleStageCode,
-	PropertiesSchema: app.MustParseJSONSchema(app.GenericEmptySchema),
+	PropertiesSchema: app.MustParseJSONSchema(propertiesSchema),
 }
 
+// createFn is a function that will be called when user requests to create a new resource.
 func createFn(_ context.Context, req *app.OperationRequest) (*app.OperationResponse, error) {
 	return &app.OperationResponse{
 		Resource: &app.Resource{
+			// ExternalID is a unique identifier for the resource. It is used to identify
+			// the resource in the system. It is recommended to use a globally unique identifier
+			// for this field.
 			ExternalID:  strconv.Itoa(int(time.Now().Unix())),
 			DisplayName: "Example Resource",
-			Type:        req.Resource.Type,
-			Properties:  map[string]any{},
+			// Properties is a map of key-value pairs that describe the resource.
+			// It will be used to display the resource in the UI.
+			Properties: map[string]any{
+				"name": req.Input["name"],
+			},
 		},
 	}, nil
 }
 
+// App returns a new instance of the Tempest App.
+// Used internally by the Tempest CLI to serve the app.
 func App() *app.App {
+	// Register the create operation with the resource definition.
 	resourceDefinition.CreateFn(
+		// our create function
 		createFn,
-		app.MustParseJSONSchema(app.GenericEmptySchema),
+		// schema for the create operation
+		app.MustParseJSONSchema(createSchema),
 	)
 
+	// Return a new instance of the Tempest App with the defined resource.
+	// One app can have multiple resources.
 	return app.New(
 		app.WithResourceDefinition(resourceDefinition),
 	)
