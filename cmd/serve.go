@@ -73,7 +73,7 @@ func serveRunE(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	waveClient, err := appapi.NewClientWithResponses(
+	tempestClient, err := appapi.NewClientWithResponses(
 		apiEndpoint,
 		appapi.WithHTTPClient(&http.Client{
 			Timeout:   10 * time.Second,
@@ -103,8 +103,8 @@ func serveRunE(cmd *cobra.Command, args []string) error {
 		}
 		defer cancel()
 
-		go startHealthCheck(runner, waveClient, appServeHealthcheckInterval)
-		go startPolling(runner, waveClient)
+		go startHealthCheck(runner, tempestClient, appServeHealthcheckInterval)
+		go startPolling(runner, tempestClient)
 	} else {
 		if !appPreserveBuildDir {
 			err := generateBuildDir(cfg, cfgDir, id, version)
@@ -120,8 +120,8 @@ func serveRunE(cmd *cobra.Command, args []string) error {
 		defer cancel()
 
 		for _, runner := range runners {
-			go startHealthCheck(runner, waveClient, appServeHealthcheckInterval)
-			go startPolling(runner, waveClient)
+			go startHealthCheck(runner, tempestClient, appServeHealthcheckInterval)
+			go startPolling(runner, tempestClient)
 		}
 	}
 
@@ -134,7 +134,7 @@ func serveRunE(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func startPolling(runner runner.Runner, waveClient *appapi.ClientWithResponses) {
+func startPolling(runner runner.Runner, tempestClient *appapi.ClientWithResponses) {
 	logger := logger.With("app_id", runner.AppID, "version", runner.Version)
 
 	logger.Info("start polling")
@@ -142,7 +142,7 @@ func startPolling(runner runner.Runner, waveClient *appapi.ClientWithResponses) 
 	for {
 		logger.Debug("polling for next task")
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		nextTask, err := waveClient.PostAppsOperationsNextWithResponse(ctx, appapi.PostAppsOperationsNextJSONRequestBody{
+		nextTask, err := tempestClient.PostAppsOperationsNextWithResponse(ctx, appapi.PostAppsOperationsNextJSONRequestBody{
 			AppId:   runner.AppID,
 			Version: runner.Version,
 		})
@@ -193,11 +193,11 @@ func startPolling(runner runner.Runner, waveClient *appapi.ClientWithResponses) 
 				metadata := &appv1.Metadata{
 					ProjectId:   nextTask.JSON200.Metadata.ProjectId,
 					ProjectName: nextTask.JSON200.Metadata.ProjectName,
-					Author:      waveOwnerToAppOwner(nextTask.JSON200.Metadata.Author),
+					Author:      tempestOwnerToAppOwner(nextTask.JSON200.Metadata.Author),
 					Owners:      make([]*appv1.Owner, 0, len(nextTask.JSON200.Metadata.Owners)),
 				}
 				for _, owner := range nextTask.JSON200.Metadata.Owners {
-					metadata.Owners = append(metadata.Owners, waveOwnerToAppOwner(owner))
+					metadata.Owners = append(metadata.Owners, tempestOwnerToAppOwner(owner))
 				}
 
 				environment := []*appv1.EnvironmentVariable{}
@@ -240,8 +240,8 @@ func startPolling(runner runner.Runner, waveClient *appapi.ClientWithResponses) 
 				}))
 				cancel()
 				if err != nil {
-					if waveErr := postWaveError(waveClient, nextTask.JSON200.TaskId, err); waveErr != nil {
-						logger.Error("report task", "task_id", nextTask.JSON200.TaskId, "error", waveErr)
+					if tempestErr := postTempestError(tempestClient, nextTask.JSON200.TaskId, err); tempestErr != nil {
+						logger.Error("report task", "task_id", nextTask.JSON200.TaskId, "error", tempestErr)
 					}
 					logger.Error("execute operation", "error", err)
 					time.Sleep(pollingInterval)
@@ -285,9 +285,9 @@ func startPolling(runner runner.Runner, waveClient *appapi.ClientWithResponses) 
 					continue
 				}
 
-				// post the response to the wave api
-				logger.Info("posting response to wave api")
-				_, err = waveClient.PostAppsOperationsReport(context.TODO(), appapi.PostAppsOperationsReportJSONRequestBody{
+				// post the response to the Tempest API api
+				logger.Info("posting response to Tempest API api")
+				_, err = tempestClient.PostAppsOperationsReport(context.TODO(), appapi.PostAppsOperationsReportJSONRequestBody{
 					TaskId:   nextTask.JSON200.TaskId,
 					Response: response,
 					Status:   appapi.ReportResponseStatusOk,
@@ -306,11 +306,11 @@ func startPolling(runner runner.Runner, waveClient *appapi.ClientWithResponses) 
 				metadata := &appv1.Metadata{
 					ProjectId:   nextTask.JSON200.Metadata.ProjectId,
 					ProjectName: nextTask.JSON200.Metadata.ProjectName,
-					Author:      waveOwnerToAppOwner(nextTask.JSON200.Metadata.Author),
+					Author:      tempestOwnerToAppOwner(nextTask.JSON200.Metadata.Author),
 					Owners:      make([]*appv1.Owner, 0, len(nextTask.JSON200.Metadata.Owners)),
 				}
 				for _, owner := range nextTask.JSON200.Metadata.Owners {
-					metadata.Owners = append(metadata.Owners, waveOwnerToAppOwner(owner))
+					metadata.Owners = append(metadata.Owners, tempestOwnerToAppOwner(owner))
 				}
 
 				ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -323,8 +323,8 @@ func startPolling(runner runner.Runner, waveClient *appapi.ClientWithResponses) 
 				}))
 				cancel()
 				if err != nil {
-					if waveErr := postWaveError(waveClient, nextTask.JSON200.TaskId, err); waveErr != nil {
-						logger.Error("report task", "task_id", nextTask.JSON200.TaskId, "error ", waveErr)
+					if tempestErr := postTempestError(tempestClient, nextTask.JSON200.TaskId, err); tempestErr != nil {
+						logger.Error("report task", "task_id", nextTask.JSON200.TaskId, "error ", tempestErr)
 					}
 					logger.Error("execute list resources", "error", err)
 					time.Sleep(pollingInterval)
@@ -366,9 +366,9 @@ func startPolling(runner runner.Runner, waveClient *appapi.ClientWithResponses) 
 					continue
 				}
 
-				// post the response to the wave api
-				logger.Info("posting response to wave api")
-				_, err = waveClient.PostAppsOperationsReport(context.TODO(), appapi.PostAppsOperationsReportJSONRequestBody{
+				// post the response to the Tempest API api
+				logger.Info("posting response to Tempest API api")
+				_, err = tempestClient.PostAppsOperationsReport(context.TODO(), appapi.PostAppsOperationsReportJSONRequestBody{
 					TaskId:   nextTask.JSON200.TaskId,
 					Response: response,
 					Status:   appapi.ReportResponseStatusOk,
@@ -395,7 +395,7 @@ func startPolling(runner runner.Runner, waveClient *appapi.ClientWithResponses) 
 
 func startHealthCheck(
 	runner runner.Runner,
-	waveClient *appapi.ClientWithResponses,
+	tempestClient *appapi.ClientWithResponses,
 	interval time.Duration,
 ) {
 	logger := logger.With("app_id", runner.AppID, "version", runner.Version)
@@ -408,7 +408,7 @@ func startHealthCheck(
 	}
 
 	// Send one health check immediately
-	err = performHealthCheck(runner.Client, waveClient, des.Msg.ResourceDefinitions, runner.AppID, runner.Version)
+	err = performHealthCheck(runner.Client, tempestClient, des.Msg.ResourceDefinitions, runner.AppID, runner.Version)
 	if err != nil {
 		logger.Error("health check", "error", err)
 	}
@@ -417,7 +417,7 @@ func startHealthCheck(
 	ticker := time.NewTicker(interval)
 	for range ticker.C {
 		<-ticker.C
-		err := performHealthCheck(runner.Client, waveClient, des.Msg.ResourceDefinitions, runner.AppID, runner.Version)
+		err := performHealthCheck(runner.Client, tempestClient, des.Msg.ResourceDefinitions, runner.AppID, runner.Version)
 		if err != nil {
 			logger.Error("health check", "error", err)
 		}
@@ -426,7 +426,7 @@ func startHealthCheck(
 
 func performHealthCheck(
 	client appv1connect.AppServiceClient,
-	waveClient *appapi.ClientWithResponses,
+	tempestClient *appapi.ClientWithResponses,
 	types []*appv1.ResourceDefinition,
 	appID string,
 	appVersion string,
@@ -447,12 +447,12 @@ func performHealthCheck(
 		if res.Msg.Status != appv1.HealthCheckStatus_HEALTH_CHECK_STATUS_UNSPECIFIED {
 			reports = append(reports, appapi.AppHealthReportItem{
 				Type:    t.Type,
-				Status:  appStatusToWaveStatus(res.Msg.Status),
+				Status:  appStatusToTempestStatus(res.Msg.Status),
 				Message: &res.Msg.Message,
 			})
 		}
 
-		_, err = waveClient.PostAppsVersionsHealth(context.TODO(), appapi.PostAppsVersionsHealthJSONRequestBody{
+		_, err = tempestClient.PostAppsVersionsHealth(context.TODO(), appapi.PostAppsVersionsHealthJSONRequestBody{
 			AppId:         appID,
 			Version:       appVersion,
 			HealthReports: reports,
@@ -465,7 +465,7 @@ func performHealthCheck(
 	return nil
 }
 
-func appStatusToWaveStatus(status appv1.HealthCheckStatus) appapi.AppHealthReportItemStatus {
+func appStatusToTempestStatus(status appv1.HealthCheckStatus) appapi.AppHealthReportItemStatus {
 	switch status {
 	case appv1.HealthCheckStatus_HEALTH_CHECK_STATUS_HEALTHY:
 		return appapi.Healthy
@@ -478,7 +478,7 @@ func appStatusToWaveStatus(status appv1.HealthCheckStatus) appapi.AppHealthRepor
 	}
 }
 
-func waveOwnerToAppOwner(owner appapi.Owner) *appv1.Owner {
+func tempestOwnerToAppOwner(owner appapi.Owner) *appv1.Owner {
 	var t appv1.OwnerType
 	switch owner.Type {
 	case appapi.User:
@@ -494,9 +494,9 @@ func waveOwnerToAppOwner(owner appapi.Owner) *appv1.Owner {
 	}
 }
 
-func postWaveError(waveClient *appapi.ClientWithResponses, taskID string, appErr error) error {
+func postTempestError(tempestClient *appapi.ClientWithResponses, taskID string, appErr error) error {
 	errStr := appErr.Error()
-	_, err := waveClient.PostAppsOperationsReport(context.TODO(), appapi.PostAppsOperationsReportJSONRequestBody{
+	_, err := tempestClient.PostAppsOperationsReport(context.TODO(), appapi.PostAppsOperationsReportJSONRequestBody{
 		TaskId:  taskID,
 		Status:  appapi.ReportResponseStatusError,
 		Message: &errStr,
