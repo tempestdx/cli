@@ -169,7 +169,7 @@ func startPolling(runner runner.Runner, tempestClient *appapi.ClientWithResponse
 
 				input, err := structpb.NewStruct(*v.Input)
 				if err != nil {
-					logger.Error("prepare operation reuest fail", "error", err)
+					logger.Error("prepare operation request fail", "error", err)
 					time.Sleep(pollingInterval)
 					continue
 				}

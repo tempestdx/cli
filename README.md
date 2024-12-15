@@ -48,7 +48,7 @@ Pull requests from the community are welcome. If you submit one, please keep the
 following guidelines in mind:
 
 1. Code must be `go fmt` compliant.
-2. All types, structs and funcs should be documented.
+2. All types, structs and functions should be documented.
 3. Ensure that `go test` succeeds.
 
 ## Test
