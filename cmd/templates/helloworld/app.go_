@@ -35,7 +35,7 @@ func createFn(_ context.Context, req *app.OperationRequest) (*app.OperationRespo
 	return &app.OperationResponse{
 		Resource: &app.Resource{
 			// ExternalID is a unique identifier for the resource. It is used to identify
-			// the resource in the system. It is recommended to use a globally unique identifier
+			// the resource in Tempest. It is recommended to use a globally unique identifier
 			// for this field.
 			ExternalID:  strconv.Itoa(int(time.Now().Unix())),
 			DisplayName: "Example Resource",
