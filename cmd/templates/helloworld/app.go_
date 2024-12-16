@@ -10,9 +10,6 @@ import (
 	"github.com/tempestdx/sdk-go/app"
 )
 
-// Embedding the schema files into the binary isn't necessary
-// but it makes it easier to distribute the app as a single binary
-// and keeps the codebase clean.
 var (
 	//go:embed properties_schema.json
 	propertiesSchema []byte
