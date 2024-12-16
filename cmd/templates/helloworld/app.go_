@@ -39,8 +39,8 @@ func createFn(_ context.Context, req *app.OperationRequest) (*app.OperationRespo
 			// for this field.
 			ExternalID:  strconv.Itoa(int(time.Now().Unix())),
 			DisplayName: "Example Resource",
-			// Properties is a map of key-value pairs that describe the resource.
-			// It will be used to display the resource in the UI.
+			// Properties allow you to define the resource specific metadata
+			// that you want displayed and tracked in your software catalog.
 			Properties: map[string]any{
 				"name": req.Input["name"],
 			},
