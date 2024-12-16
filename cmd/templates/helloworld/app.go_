@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	// Our SDK that defines interface between your app and Tempest.
+	// Tempest SDK defines interface between the app and Tempest API.
 	"github.com/tempestdx/sdk-go/app"
 )
 
