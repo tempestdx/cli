@@ -30,7 +30,7 @@ var resourceDefinition = app.ResourceDefinition{
 	PropertiesSchema: app.MustParseJSONSchema(propertiesSchema),
 }
 
-// createFn is a function that will be called when user requests to create a new resource.
+// createFn is a function that will be invoked when the user requests the creation of a new resource.
 func createFn(_ context.Context, req *app.OperationRequest) (*app.OperationResponse, error) {
 	return &app.OperationResponse{
 		Resource: &app.Resource{
