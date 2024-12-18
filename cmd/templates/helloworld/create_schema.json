@@ -6,10 +6,10 @@
         "name": {
             "title": "Name",
             "type": "string",
-            "description": "The name of the repository.",
+            "description": "The name of the resource.",
             "pattern": "^[A-Za-z0-9_.-]+$",
             "examples": [
-                "my-repository"
+                "my-resource"
             ]
         }
     },
