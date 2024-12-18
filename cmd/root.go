@@ -14,6 +14,7 @@ var (
 	apiEndpoint string
 	cfgFile     string
 	tokenStore  secret.TokenStore
+	debugMode   bool
 
 	rootCmd = &cobra.Command{
 		Use:     "tempest [command] [flags]",
@@ -51,6 +52,7 @@ func init() {
 	rootCmd.AddCommand(docCmd)
 	rootCmd.PersistentFlags().StringVar(&apiEndpoint, "api-endpoint", TempestProdAPI, "The Tempest API endpoint to connect to.")
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "full path to the config file (default is $WORKDIR/tempest.yaml)")
+	rootCmd.PersistentFlags().BoolVar(&debugMode, "debug", false, "Enable verbose logging")
 
 	tokenStore = &secret.Keyring{}
 }
