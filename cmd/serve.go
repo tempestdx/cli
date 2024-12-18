@@ -285,8 +285,8 @@ func startPolling(runner runner.Runner, tempestClient *appapi.ClientWithResponse
 					continue
 				}
 
-				// post the response to the Tempest API api
-				logger.Info("posting response to Tempest API api")
+				// post the response to the Tempest API
+				logger.Info("posting response to Tempest API")
 				_, err = tempestClient.PostAppsOperationsReport(context.TODO(), appapi.PostAppsOperationsReportJSONRequestBody{
 					TaskId:   nextTask.JSON200.TaskId,
 					Response: response,
@@ -366,8 +366,8 @@ func startPolling(runner runner.Runner, tempestClient *appapi.ClientWithResponse
 					continue
 				}
 
-				// post the response to the Tempest API api
-				logger.Info("posting response to Tempest API api")
+				// post the response to the Tempest API
+				logger.Info("posting response to Tempest API")
 				_, err = tempestClient.PostAppsOperationsReport(context.TODO(), appapi.PostAppsOperationsReportJSONRequestBody{
 					TaskId:   nextTask.JSON200.TaskId,
 					Response: response,
