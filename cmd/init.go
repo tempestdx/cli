@@ -280,6 +280,10 @@ func generateBuildDir(cfg *config.TempestConfig, cfgPath, appID, version string)
 		return fmt.Errorf("write apps.go: %w", err)
 	}
 
+	// Read the parent go.mod file
+	parentModContent, err := os.ReadFile(filepath.Join(cfgPath, "go.mod"))
+	hasParentMod := err == nil // Track if parent go.mod exists
+
 	// Remove go.mod if it exists
 	goModPath := filepath.Join(absBuildDir, "go.mod")
 	if _, err := os.Stat(goModPath); err == nil {
@@ -305,6 +309,26 @@ func generateBuildDir(cfg *config.TempestConfig, cfgPath, appID, version string)
 		return fmt.Errorf("go mod init: %w", err)
 	}
 
+	// Only attempt to copy dependencies if parent go.mod exists
+	if hasParentMod {
+		// Read the newly created go.mod to preserve module and go version
+		newModContent, err := os.ReadFile(goModPath)
+		if err != nil {
+			return fmt.Errorf("read new go.mod: %w", err)
+		}
+
+		// Find and append everything after the first require from parent go.mod
+		content := string(parentModContent)
+		if idx := strings.Index(content, "require"); idx != -1 {
+			remainingContent := string(newModContent) + "\n" + content[idx:]
+			err = os.WriteFile(goModPath, []byte(remainingContent), 0600)
+			if err != nil {
+				return fmt.Errorf("write dependencies to go.mod: %w", err)
+			}
+		}
+	}
+
+	// Run go mod tidy
 	modTidy := exec.Command("go", "mod", "tidy")
 	modTidy.Dir = absBuildDir
 	err = modTidy.Run()
