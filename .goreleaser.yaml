@@ -15,11 +15,15 @@ builds:
     env:
       - CGO_ENABLED=0
     goos:
+      - darwin
       - linux
       - windows
     goarch:
       - amd64
       - arm64
+    ignore:
+      - goos: windows
+        goarch: arm
 
 dockers:
   - image_templates:
@@ -70,6 +74,17 @@ docker_manifests:
     image_templates:
       - "tempestdx/cli:latest-amd64"
       - "tempestdx/cli:latest-arm64"
+
+notarize:
+  macos:
+    - enabled: '{{ isEnvSet "MACOS_SIGN_P12" }}'
+      sign:
+        certificate: "{{.Env.MACOS_SIGN_P12}}"
+        password: "{{.Env.MACOS_SIGN_PASSWORD}}"
+      notarize:
+        issuer_id: "{{.Env.MACOS_NOTARY_ISSUER_ID}}"
+        key_id: "{{.Env.MACOS_NOTARY_KEY_ID}}"
+        key: "{{.Env.MACOS_NOTARY_KEY}}"
 
 archives:
   - format: tar.gz
