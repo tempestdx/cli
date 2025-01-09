@@ -126,7 +126,7 @@ brews:
     repository:
       owner: tempestdx
       name: homebrew-tap
-      token: "{{ .Env.GITHUB_PAT }}"
+      token: "{{ .Env.GH_PAT }}"
     directory: Formula
     url_template: "https://github.com/tempestdx/cli/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
     homepage: "https://tempestdx.com/"
