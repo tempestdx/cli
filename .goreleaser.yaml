@@ -9,21 +9,20 @@ before:
 builds:
   - binary: tempest
     main: ./tempest/main.go
+    flags:
+      - -trimpath
     ldflags:
       - -s -w -X github.com/tempestdx/cli/internal/version.Version={{.Version}}
     mod_timestamp: "{{ .CommitTimestamp }}"
     env:
       - CGO_ENABLED=0
-    goos:
-      - darwin
-      - linux
-      - windows
-    goarch:
-      - amd64
-      - arm64
-    ignore:
-      - goos: windows
-        goarch: arm
+    targets:
+      - darwin_amd64
+      - darwin_arm64
+      - linux_amd64
+      - linux_arm64
+      - windows_amd64
+      - windows_arm64
 
 dockers:
   - image_templates:
@@ -39,7 +38,7 @@ dockers:
       - "--pull"
       - "--label=org.opencontainers.image.created={{.Date}}"
       - "--label=org.opencontainers.image.documentation=https://docs.tempestdx.com"
-      - "--label=org.opencontainers.image.licenses=Apache"
+      - "--label=org.opencontainers.image.licenses=Apache-2.0"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.source={{ .GitURL }}"
       - "--label=org.opencontainers.image.title={{.ProjectName}}"
@@ -58,7 +57,7 @@ dockers:
       - "--pull"
       - "--label=org.opencontainers.image.created={{.Date}}"
       - "--label=org.opencontainers.image.documentation=https://docs.tempestdx.com"
-      - "--label=org.opencontainers.image.licenses=Apache"
+      - "--label=org.opencontainers.image.licenses=Apache-2.0"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.source={{ .GitURL }}"
       - "--label=org.opencontainers.image.title={{.ProjectName}}"
@@ -109,3 +108,26 @@ release:
 changelog:
   use: github
   sort: asc
+
+nfpms:
+  - vendor: Tempest
+    description: Tempest CLI
+    maintainer: Tempest CLI <support@tempestdx.com>
+    homepage: https://tempestdx.com
+    license: Apache-2.0
+    formats:
+      - apk
+      - deb
+      - rpm
+      - archlinux
+
+brews:
+  - name: tempest
+    repository:
+      owner: tempestdx
+      name: homebrew-tap
+      token: "{{ .Env.GITHUB_PAT }}"
+    directory: Formula
+    url_template: "https://github.com/tempestdx/cli/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+    homepage: "https://tempestdx.com/"
+    license: "Apache-2.0"
