@@ -14,10 +14,21 @@ The official [Tempest][tempest] CLI client.
 You can install the Tempest CLI, scaffold an app locally, and display its
 configuration details in a few simple steps.
 
-```sh
-# Install the Tempest CLI
-go install github.com/tempestdx/cli/tempest@latest
+### Install Using Homebrew
 
+```sh
+brew install tempestdx/tap/tempest
+```
+
+### Install Using Go
+
+```sh
+go install github.com/tempestdx/cli/tempest@latest
+```
+
+### Getting Started
+
+```sh
 # Create a directory and initialize your first Private App
 mkdir tempest && cd tempest
 tempest app init <name>
