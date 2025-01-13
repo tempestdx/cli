@@ -56,6 +56,14 @@ func App() *app.App {
 		app.MustParseJSONSchema(createSchema),
 	)
 
+	resourceDefinition.HealthCheckFn(func(_ context.Context) (*app.HealthCheckResponse, error) {
+		// This is a simple health check that always returns healthy
+		// You can implement your own health check logic here
+		return &app.HealthCheckResponse{
+			Status: app.HealthCheckStatusHealthy,
+		}, nil
+	})
+
 	// Return a new instance of the Tempest App with the defined resource.
 	// One app can have multiple resources.
 	return app.New(
