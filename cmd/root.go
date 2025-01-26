@@ -51,8 +51,11 @@ func Execute() {
 func init() {
 	rootCmd.AddCommand(docCmd)
 	rootCmd.PersistentFlags().StringVar(&apiEndpoint, "api-endpoint", TempestProdAPI, "The Tempest API endpoint to connect to.")
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "full path to the config file (default is $WORKDIR/tempest.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "Full path to the config file (default is $WORKDIR/tempest.yaml)")
 	rootCmd.PersistentFlags().BoolVar(&debugMode, "debug", false, "Enable verbose logging")
+	// Customize the help and version flags
+	rootCmd.Flags().BoolP("help", "h", false, "Help for tempest")
+	rootCmd.Flags().BoolP("version", "v", false, "Version for tempest")
 
 	tokenStore = &secret.Keyring{}
 }
