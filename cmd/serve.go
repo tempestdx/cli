@@ -28,6 +28,7 @@ const (
 
 var (
 	appServeHealthcheckInterval time.Duration
+	appExecutionTimeout         time.Duration
 	logger                      *slog.Logger
 
 	serveCmd = &cobra.Command{
@@ -45,6 +46,7 @@ func init() {
 	appCmd.AddCommand(serveCmd)
 
 	serveCmd.Flags().DurationVarP(&appServeHealthcheckInterval, "healthcheck-interval", "i", 5*time.Minute, "The interval at which to perform healthchecks.")
+	serveCmd.Flags().DurationVarP(&appExecutionTimeout, "app-execution-timeout", "t", 5*time.Minute, "The timeout for the app execution operation.")
 }
 
 func serveRunE(cmd *cobra.Command, args []string) error {
@@ -227,7 +229,7 @@ func startPolling(runner runner.Runner, tempestClient *appapi.ClientWithResponse
 					}
 				}
 
-				ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+				ctx, cancel := context.WithTimeout(context.Background(), appExecutionTimeout)
 				res, err := runner.Client.ExecuteResourceOperation(ctx, connect.NewRequest(&appv1.ExecuteResourceOperationRequest{
 					Resource: &appv1.Resource{
 						Type:       v.Resource.Type,
