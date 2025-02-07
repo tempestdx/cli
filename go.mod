@@ -9,7 +9,7 @@ require (
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.10.0
 	github.com/tempestdx/openapi v0.1.3
-	github.com/tempestdx/protobuf v0.1.2
+	github.com/tempestdx/protobuf v0.1.3
 	github.com/tempestdx/sdk-go v0.1.5
 	github.com/tidwall/pretty v1.2.1
 	github.com/zalando/go-keyring v0.2.6
