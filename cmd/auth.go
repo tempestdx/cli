@@ -1,15 +1,16 @@
 package cmd
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strings"
+	"syscall"
 
 	"github.com/spf13/cobra"
 	"github.com/zalando/go-keyring"
+	"golang.org/x/term"
 )
 
 var (
@@ -66,45 +67,64 @@ func authShowRunE(cmd *cobra.Command, args []string) error {
 }
 
 func authLoginRunE(cmd *cobra.Command, args []string) error {
+	var input string
+	var err error
+
 	if authWithToken {
-		// Check if stdin is a terminal
-		stat, err := os.Stdin.Stat()
+		input, err = readInputFromStdin(cmd)
 		if err != nil {
 			return err
 		}
-
-		if (stat.Mode() & os.ModeCharDevice) != 0 {
-			return errors.New("Nothing read from stdin.\nTry: tempest auth --with-token < token.txt")
-		}
-
-		b, err := io.ReadAll(cmd.InOrStdin())
-		if err != nil {
-			return err
-		}
-
-		token := strings.TrimSpace(string(b))
-
-		if token == "" {
-			return errors.New("Empty token.\n Try: tempest auth --with-token < token.txt")
-		}
-
-		return tokenStore.Set(token)
-	}
-
-	reader := bufio.NewReader(os.Stdin)
-
-	for {
-		fmt.Print("Input your API Key: ")
-		input, _ := reader.ReadString('\n')
-		input = strings.TrimSpace(input)
 
 		if input == "" {
-			fmt.Println("API Key cannot be empty.")
-			continue
+			return errors.New("empty token\n Try: tempest auth login --with-token < token.txt\n")
 		}
+	} else {
+		if term.IsTerminal(int(syscall.Stdin)) {
+			fmt.Print("Input your API Key: ")
+			bytePassword, err := term.ReadPassword(int(syscall.Stdin))
+			if err != nil {
+				return err
+			}
+			fmt.Println() // Print a newline after the password input
 
-		return tokenStore.Set(input)
+			input = strings.TrimSpace(string(bytePassword))
+
+			if input == "" {
+				return errors.New("API Key cannot be empty.")
+			}
+		} else {
+			input, err = readInputFromStdin(cmd)
+			if err != nil {
+				return err
+			}
+
+			if input == "" {
+				return errors.New("empty token\n Try: tempest auth login < token.txt\n")
+			}
+		}
 	}
+
+	return tokenStore.Set(input)
+}
+
+func readInputFromStdin(cmd *cobra.Command) (string, error) {
+	// Check if stdin is a terminal
+	stat, err := os.Stdin.Stat()
+	if err != nil {
+		return "", err
+	}
+
+	if (stat.Mode() & os.ModeCharDevice) != 0 {
+		return "", errors.New("Nothing read from stdin.\n Try: tempest auth --with-token < token.txt")
+	}
+
+	b, err := io.ReadAll(cmd.InOrStdin())
+	if err != nil {
+		return "", err
+	}
+
+	return strings.TrimSpace(string(b)), nil
 }
 
 func authLogoutRunE(cmd *cobra.Command, args []string) error {
