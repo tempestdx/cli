@@ -389,8 +389,12 @@ func startPolling(runner runner.Runner, tempestClient *appapi.ClientWithResponse
 		case http.StatusInternalServerError:
 			logger.Error("internal server error, sleeping")
 			time.Sleep(pollingInterval)
+		case http.StatusUnauthorized:
+			logger.Error("unauthorized, expired/revoked token")
+			time.Sleep(pollingInterval)
 		default:
 			logger.Error("unexpected status", "status", nextTask.Status(), "status_code", nextTask.StatusCode())
+			time.Sleep(pollingInterval)
 		}
 	}
 }
