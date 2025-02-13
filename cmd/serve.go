@@ -232,7 +232,7 @@ func startPolling(runner runner.Runner, tempestClient *appapi.ClientWithResponse
 				ctx, cancel := context.WithTimeout(context.Background(), appExecutionTimeout)
 				res, err := runner.Client.ExecuteResourceOperation(ctx, connect.NewRequest(&appv1.ExecuteResourceOperationRequest{
 					Resource: &appv1.Resource{
-						Type:       v.Resource.Type,
+						Type:       *v.Resource.Type,
 						ExternalId: v.Resource.ExternalId,
 					},
 					Operation:            op,
@@ -256,7 +256,7 @@ func startPolling(runner runner.Runner, tempestClient *appapi.ClientWithResponse
 				var response appapi.ReportResponse_Response
 
 				resource := appapi.Resource{
-					Type:        res.Msg.Resource.Type,
+					Type:        &res.Msg.Resource.Type,
 					ExternalId:  res.Msg.Resource.ExternalId,
 					DisplayName: res.Msg.Resource.DisplayName,
 				}
@@ -318,7 +318,7 @@ func startPolling(runner runner.Runner, tempestClient *appapi.ClientWithResponse
 				ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 				res, err := runner.Client.ListResources(ctx, connect.NewRequest(&appv1.ListResourcesRequest{
 					Resource: &appv1.Resource{
-						Type: v.Resource.Type,
+						Type: *v.Resource.Type,
 					},
 					Next:     v.Next,
 					Metadata: metadata,
@@ -349,7 +349,7 @@ func startPolling(runner runner.Runner, tempestClient *appapi.ClientWithResponse
 						ExternalId:  r.ExternalId,
 						DisplayName: r.DisplayName,
 						Properties:  &properties,
-						Type:        r.Type,
+						Type:        &r.Type,
 						Links: &appapi.Links{
 							Links: &items,
 						},
