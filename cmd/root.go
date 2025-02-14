@@ -16,6 +16,10 @@ var (
 	tokenStore  secret.TokenStore
 	debugMode   bool
 
+	headFlag int
+	tailFlag int
+
+
 	rootCmd = &cobra.Command{
 		Use:     "tempest [command] [flags]",
 		Short:   "Tempest is a CLI tool to interact with the Tempest API and SDK",
