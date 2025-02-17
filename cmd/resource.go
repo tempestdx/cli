@@ -64,7 +64,6 @@ func listResources(cmd *cobra.Command, args []string) error {
 	for {
 		res, err := tempestClient.ResourceCollectionWithResponse(context.TODO(), appapi.ResourceCollectionJSONRequestBody{
 			Next:        nextToken,
-			RequestType: "list_resources",
 		})
 		if err != nil {
 			return fmt.Errorf("list resources: %w", err)
