@@ -8,7 +8,7 @@ require (
 	github.com/charmbracelet/glamour v0.8.0
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
-	github.com/tempestdx/openapi v0.1.4-0.20250214031059-8fe414f76597
+	github.com/tempestdx/openapi v0.1.4
 	github.com/tempestdx/protobuf v0.1.3
 	github.com/tempestdx/sdk-go v0.1.5
 	github.com/tidwall/pretty v1.2.1
