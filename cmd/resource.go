@@ -59,7 +59,7 @@ func listResources(cmd *cobra.Command, args []string) error {
 	}
 
 	var allResources []appapi.Resource
-	var nextToken string
+	var nextToken *string
 
 	for {
 		res, err := tempestClient.ResourceCollectionWithResponse(context.TODO(), appapi.ResourceCollectionJSONRequestBody{
@@ -84,7 +84,7 @@ func listResources(cmd *cobra.Command, args []string) error {
 		if res.JSON200.Next == "" {
 			break
 		}
-		nextToken = res.JSON200.Next
+		nextToken = &res.JSON200.Next
 	}
 
 	resources := allResources
