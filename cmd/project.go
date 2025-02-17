@@ -56,24 +56,36 @@ func listProjects(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("create client: %w", err)
 	}
 
-	res, err := tempestClient.ProjectCollectionWithResponse(context.TODO(), appapi.ProjectCollectionJSONRequestBody{
-		Next: nil,
-	})
-	if err != nil {
-		return fmt.Errorf("list projects: %w", err)
+	var allProjects []appapi.Project
+	var nextToken *string
+
+	for {
+		res, err := tempestClient.ProjectCollectionWithResponse(context.TODO(), appapi.ProjectCollectionJSONRequestBody{
+			Next: nextToken,
+		})
+		if err != nil {
+			return fmt.Errorf("list projects: %w", err)
+		}
+
+		if res.JSON200 == nil {
+			if res.JSON400 != nil {
+				return fmt.Errorf("bad request: %s", res.JSON400.Error)
+			}
+			if res.JSON500 != nil {
+				return fmt.Errorf("server error: %s", res.JSON500.Error)
+			}
+			return fmt.Errorf("unexpected response: %s", res.Status())
+		}
+
+		allProjects = append(allProjects, res.JSON200.Projects...)
+
+		if res.JSON200.Next == "" {
+			break
+		}
+		nextToken = &res.JSON200.Next
 	}
 
-	if res.JSON200 == nil {
-		if res.JSON400 != nil {
-			return fmt.Errorf("bad request: %s", res.JSON400.Error)
-		}
-		if res.JSON500 != nil {
-			return fmt.Errorf("server error: %s", res.JSON500.Error)
-		}
-		return fmt.Errorf("unexpected response: %s", res.Status())
-	}
-
-	projects := res.JSON200.Projects
+	projects := allProjects
 	if headFlag > 0 && headFlag < len(projects) {
 		projects = projects[:headFlag]
 	} else if tailFlag > 0 && tailFlag < len(projects) {
@@ -116,13 +128,9 @@ func listProjects(cmd *cobra.Command, args []string) error {
 	}
 	cmd.Print(out)
 
-	totalCount := len(res.JSON200.Projects)
+	totalCount := len(allProjects)
 	if headFlag > 0 || tailFlag > 0 {
 		cmd.Printf("Showing %d of %d projects\n", len(projects), totalCount)
-	}
-
-	if res.JSON200.Next != "" {
-		cmd.Println("More projects available. Use pagination to see more.")
 	}
 
 	return nil
@@ -164,31 +172,49 @@ func getProject(cmd *cobra.Command, args []string) error {
 	}
 
 	project := res.JSON200
+
+	// Main Information
 	cmd.Printf("Name:\t%s\n", project.Name)
 	cmd.Printf("ID:\t%s\n", project.Id)
 	cmd.Println()
 
+	// Metadata
 	cmd.Println("Metadata:")
 	cmd.Printf("  Type:\t%s\n", project.Type)
 	cmd.Printf("  Organization ID:\t%s\n", project.OrganizationId)
+
+	teamID := "-"
 	if project.TeamId != nil {
-		cmd.Printf("  Team ID:\t%s\n", *project.TeamId)
+		teamID = *project.TeamId
 	}
+	cmd.Printf("  Team ID:\t%s\n", teamID)
+
+	createdAt := "-"
 	if project.CreatedAt != nil {
-		cmd.Printf("  Creation Timestamp:\t%s\n", project.CreatedAt.Format(time.RFC3339))
+		createdAt = project.CreatedAt.Format(time.RFC3339)
 	}
+	cmd.Printf("  Creation Timestamp:\t%s\n", createdAt)
+
+	updatedAt := "-"
 	if project.UpdatedAt != nil {
-		cmd.Printf("  Last Updated:\t%s\n", project.UpdatedAt.Format(time.RFC3339))
+		updatedAt = project.UpdatedAt.Format(time.RFC3339)
 	}
+	cmd.Printf("  Last Updated:\t%s\n", updatedAt)
 	cmd.Println()
 
+	// Status
 	cmd.Println("Status:")
+	published := "-"
 	if project.Published != nil {
-		cmd.Printf("  Published:\t%v\n", *project.Published)
+		published = fmt.Sprintf("%v", *project.Published)
 	}
+	cmd.Printf("  Published:\t%s\n", published)
+
+	fromRecipe := "-"
 	if project.FromRecipe != nil {
-		cmd.Printf("  From Recipe:\t%s\n", *project.FromRecipe)
+		fromRecipe = *project.FromRecipe
 	}
+	cmd.Printf("  From Recipe:\t%s\n", fromRecipe)
 
 	return nil
 }
