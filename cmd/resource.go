@@ -39,9 +39,7 @@ func init() {
 	resourceCmd.AddCommand(resourceListCmd)
 	resourceCmd.AddCommand(resourceGetCmd)
 
-	resourceListCmd.Flags().IntVar(&headFlag, "head", 0, "Show first n resources")
-	resourceListCmd.Flags().IntVar(&tailFlag, "tail", 0, "Show last n resources")
-	resourceListCmd.MarkFlagsMutuallyExclusive("head", "tail")
+	resourceListCmd.Flags().IntVar(&limitFlag, "limit", 0, "Limit the number of resources shown")
 }
 
 func listResources(cmd *cobra.Command, args []string) error {
@@ -63,7 +61,7 @@ func listResources(cmd *cobra.Command, args []string) error {
 
 	for {
 		res, err := tempestClient.ResourceCollectionWithResponse(context.TODO(), appapi.ResourceCollectionJSONRequestBody{
-			Next:        nextToken,
+			Next: nextToken,
 		})
 		if err != nil {
 			return fmt.Errorf("list resources: %w", err)
@@ -81,6 +79,11 @@ func listResources(cmd *cobra.Command, args []string) error {
 
 		allResources = append(allResources, res.JSON200.Resources...)
 
+		if limitFlag > 0 && len(allResources) >= limitFlag {
+			allResources = allResources[:limitFlag]
+			break
+		}
+
 		if res.JSON200.Next == "" {
 			break
 		}
@@ -88,11 +91,6 @@ func listResources(cmd *cobra.Command, args []string) error {
 	}
 
 	resources := allResources
-	if headFlag > 0 && headFlag < len(resources) {
-		resources = resources[:headFlag]
-	} else if tailFlag > 0 && tailFlag < len(resources) {
-		resources = resources[len(resources)-tailFlag:]
-	}
 
 	table := "| ID | Name | Type | Organization ID |\n"
 	table += "|-------|------|------|----------------|\n"
@@ -130,8 +128,8 @@ func listResources(cmd *cobra.Command, args []string) error {
 	cmd.Print(out)
 
 	totalCount := len(allResources)
-	if headFlag > 0 || tailFlag > 0 {
-		cmd.Printf("Showing %d of %d resources\n", len(resources), totalCount)
+	if limitFlag > 0 {
+		cmd.Printf("Showing %d of %d or more resources\n", len(resources), totalCount)
 	}
 
 	return nil
