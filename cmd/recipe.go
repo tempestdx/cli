@@ -37,9 +37,7 @@ func init() {
 	recipeCmd.AddCommand(recipeListCmd)
 	recipeCmd.AddCommand(recipeGetCmd)
 
-	recipeListCmd.Flags().IntVar(&headFlag, "head", 0, "Show first n recipes")
-	recipeListCmd.Flags().IntVar(&tailFlag, "tail", 0, "Show last n recipes")
-	recipeListCmd.MarkFlagsMutuallyExclusive("head", "tail")
+	recipeListCmd.Flags().IntVar(&limitFlag, "limit", 0, "Limit the number of recipes shown")
 }
 
 func listRecipes(cmd *cobra.Command, args []string) error {
@@ -79,6 +77,11 @@ func listRecipes(cmd *cobra.Command, args []string) error {
 
 		allRecipes = append(allRecipes, res.JSON200.Recipes...)
 
+		if limitFlag > 0 && len(allRecipes) >= limitFlag {
+			allRecipes = allRecipes[:limitFlag]
+			break
+		}
+
 		if res.JSON200.Next == "" {
 			break
 		}
@@ -86,11 +89,6 @@ func listRecipes(cmd *cobra.Command, args []string) error {
 	}
 
 	recipes := allRecipes
-	if headFlag > 0 && headFlag < len(recipes) {
-		recipes = recipes[:headFlag]
-	} else if tailFlag > 0 && tailFlag < len(recipes) {
-		recipes = recipes[len(recipes)-tailFlag:]
-	}
 
 	table := "| ID | Name | Type | Team ID | Public | Published | Published At |\n"
 	table += "|-------|------|------|---------|---------|-----------|-------------|\n"
@@ -139,8 +137,8 @@ func listRecipes(cmd *cobra.Command, args []string) error {
 	cmd.Print(out)
 
 	totalCount := len(allRecipes)
-	if headFlag > 0 || tailFlag > 0 {
-		cmd.Printf("Showing %d of %d recipes\n", len(recipes), totalCount)
+	if limitFlag > 0 {
+		cmd.Printf("Showing %d of %d or more recipes\n", len(recipes), totalCount)
 	}
 
 	return nil

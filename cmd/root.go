@@ -16,8 +16,7 @@ var (
 	tokenStore  secret.TokenStore
 	debugMode   bool
 
-	headFlag int
-	tailFlag int
+	limitFlag int
 
 
 	rootCmd = &cobra.Command{

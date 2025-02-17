@@ -37,9 +37,7 @@ func init() {
 	projectCmd.AddCommand(projectListCmd)
 	projectCmd.AddCommand(projectGetCmd)
 
-	projectListCmd.Flags().IntVar(&headFlag, "head", 0, "Show first n projects")
-	projectListCmd.Flags().IntVar(&tailFlag, "tail", 0, "Show last n projects")
-	projectListCmd.MarkFlagsMutuallyExclusive("head", "tail")
+	projectListCmd.Flags().IntVar(&limitFlag, "limit", 0, "Limit the number of projects shown")
 }
 
 func listProjects(cmd *cobra.Command, args []string) error {
@@ -79,6 +77,11 @@ func listProjects(cmd *cobra.Command, args []string) error {
 
 		allProjects = append(allProjects, res.JSON200.Projects...)
 
+		if limitFlag > 0 && len(allProjects) >= limitFlag {
+			allProjects = allProjects[:limitFlag]
+			break
+		}
+
 		if res.JSON200.Next == "" {
 			break
 		}
@@ -86,11 +89,6 @@ func listProjects(cmd *cobra.Command, args []string) error {
 	}
 
 	projects := allProjects
-	if headFlag > 0 && headFlag < len(projects) {
-		projects = projects[:headFlag]
-	} else if tailFlag > 0 && tailFlag < len(projects) {
-		projects = projects[len(projects)-tailFlag:]
-	}
 
 	table := "| ID | Name | Type | From Recipe | Organization ID | Team ID |\n"
 	table += "|----|------|------|-------------|-----------------|----------|\n"
@@ -129,8 +127,8 @@ func listProjects(cmd *cobra.Command, args []string) error {
 	cmd.Print(out)
 
 	totalCount := len(allProjects)
-	if headFlag > 0 || tailFlag > 0 {
-		cmd.Printf("Showing %d of %d projects\n", len(projects), totalCount)
+	if limitFlag > 0 {
+		cmd.Printf("Showing %d of %d or more projects\n", len(projects), totalCount)
 	}
 
 	return nil
