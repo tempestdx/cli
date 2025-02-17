@@ -56,18 +56,36 @@ func listRecipes(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("create client: %w", err)
 	}
 
-	res, err := tempestClient.RecipeCollectionWithResponse(context.TODO(), appapi.RecipeCollectionJSONRequestBody{
-		Next: nil,
-	})
-	if err != nil {
-		return fmt.Errorf("list recipes: %w", err)
+	var allRecipes []appapi.Recipe
+	var nextToken *string
+
+	for {
+		res, err := tempestClient.RecipeCollectionWithResponse(context.TODO(), appapi.RecipeCollectionJSONRequestBody{
+			Next: nextToken,
+		})
+		if err != nil {
+			return fmt.Errorf("list recipes: %w", err)
+		}
+
+		if res.JSON200 == nil {
+			if res.JSON400 != nil {
+				return fmt.Errorf("bad request: %s", res.JSON400.Error)
+			}
+			if res.JSON500 != nil {
+				return fmt.Errorf("server error: %s", res.JSON500.Error)
+			}
+			return fmt.Errorf("unexpected response: %s", res.Status())
+		}
+
+		allRecipes = append(allRecipes, res.JSON200.Recipes...)
+
+		if res.JSON200.Next == "" {
+			break
+		}
+		nextToken = &res.JSON200.Next
 	}
 
-	if res.JSON200 == nil {
-		return fmt.Errorf("unexpected response: %s", res.Status())
-	}
-
-	recipes := res.JSON200.Recipes
+	recipes := allRecipes
 	if headFlag > 0 && headFlag < len(recipes) {
 		recipes = recipes[:headFlag]
 	} else if tailFlag > 0 && tailFlag < len(recipes) {
@@ -120,13 +138,9 @@ func listRecipes(cmd *cobra.Command, args []string) error {
 	}
 	cmd.Print(out)
 
-	totalCount := len(res.JSON200.Recipes)
+	totalCount := len(allRecipes)
 	if headFlag > 0 || tailFlag > 0 {
 		cmd.Printf("Showing %d of %d recipes\n", len(recipes), totalCount)
-	}
-
-	if res.JSON200.Next != "" {
-		cmd.Printf("More recipes available. Use --after %s to see more.\n", res.JSON200.Next)
 	}
 
 	return nil
@@ -155,12 +169,21 @@ func getRecipe(cmd *cobra.Command, args []string) error {
 	}
 
 	if res.JSON200 == nil {
+		if res.JSON400 != nil {
+			return fmt.Errorf("bad request: %s", res.JSON400.Error)
+		}
+		if res.JSON404 != nil {
+			return fmt.Errorf("not found: %s", res.JSON404.Error)
+		}
+		if res.JSON500 != nil {
+			return fmt.Errorf("server error: %s", res.JSON500.Error)
+		}
 		return fmt.Errorf("unexpected response: %s", res.Status())
 	}
 
 	recipe := res.JSON200
 
-	// Main Information (required fields from the schema)
+	// Main Information
 	cmd.Printf("Name:\t%s\n", recipe.Name)
 	cmd.Printf("ID:\t%s\n", recipe.Id)
 	cmd.Printf("Type:\t%s\n", recipe.Type)
@@ -168,28 +191,44 @@ func getRecipe(cmd *cobra.Command, args []string) error {
 
 	// Metadata
 	cmd.Println("Metadata:")
+	teamID := "-"
 	if recipe.TeamId != nil {
-		cmd.Printf("  Team ID:\t%s\n", *recipe.TeamId)
+		teamID = *recipe.TeamId
 	}
+	cmd.Printf("  Team ID:\t%s\n", teamID)
+
+	createdAt := "-"
 	if recipe.CreatedAt != nil {
-		cmd.Printf("  Creation Timestamp:\t%s\n", recipe.CreatedAt.Format(time.RFC3339))
+		createdAt = recipe.CreatedAt.Format(time.RFC3339)
 	}
+	cmd.Printf("  Creation Timestamp:\t%s\n", createdAt)
+
+	updatedAt := "-"
 	if recipe.UpdatedAt != nil {
-		cmd.Printf("  Last Updated:\t%s\n", recipe.UpdatedAt.Format(time.RFC3339))
+		updatedAt = recipe.UpdatedAt.Format(time.RFC3339)
 	}
+	cmd.Printf("  Last Updated:\t%s\n", updatedAt)
 	cmd.Println()
 
 	// Status
 	cmd.Println("Status:")
+	public := "-"
 	if recipe.Public != nil {
-		cmd.Printf("  Public:\t%v\n", *recipe.Public)
+		public = fmt.Sprintf("%v", *recipe.Public)
 	}
+	cmd.Printf("  Public:\t%s\n", public)
+
+	published := "-"
 	if recipe.Published != nil {
-		cmd.Printf("  Published:\t%v\n", *recipe.Published)
+		published = fmt.Sprintf("%v", *recipe.Published)
 	}
+	cmd.Printf("  Published:\t%s\n", published)
+
+	publishedAt := "-"
 	if recipe.PublishedAt != nil {
-		cmd.Printf("  Published At:\t%s\n", recipe.PublishedAt.Format(time.RFC3339))
+		publishedAt = recipe.PublishedAt.Format(time.RFC3339)
 	}
+	cmd.Printf("  Published At:\t%s\n", publishedAt)
 
 	return nil
 }
