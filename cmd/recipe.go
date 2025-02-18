@@ -77,15 +77,14 @@ func listRecipes(cmd *cobra.Command, args []string) error {
 
 		allRecipes = append(allRecipes, res.JSON200.Recipes...)
 
-		if limitFlag > 0 && len(allRecipes) >= limitFlag {
-			allRecipes = allRecipes[:limitFlag]
-			break
-		}
-
 		if res.JSON200.Next == "" {
 			break
 		}
 		nextToken = &res.JSON200.Next
+	}
+
+	if limitFlag > 0 && len(allRecipes) > limitFlag {
+		allRecipes = allRecipes[:limitFlag]
 	}
 
 	recipes := allRecipes
@@ -136,9 +135,11 @@ func listRecipes(cmd *cobra.Command, args []string) error {
 	}
 	cmd.Print(out)
 
-	totalCount := len(allRecipes)
+	totalFetched := len(allRecipes)
 	if limitFlag > 0 {
-		cmd.Printf("Showing %d of %d or more recipes\n", len(recipes), totalCount)
+		cmd.Printf("Showing %d/%d recipes\n", len(recipes), totalFetched)
+	} else {
+		cmd.Printf("Showing %d recipes\n", len(recipes))
 	}
 
 	return nil

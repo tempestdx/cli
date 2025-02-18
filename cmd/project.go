@@ -56,8 +56,10 @@ func listProjects(cmd *cobra.Command, args []string) error {
 
 	var allProjects []appapi.Project
 	var nextToken *string
+	pageCount := 0
 
 	for {
+		pageCount++
 		res, err := tempestClient.PostProjectsListWithResponse(context.TODO(), appapi.PostProjectsListJSONRequestBody{
 			Next: nextToken,
 		})
@@ -77,23 +79,20 @@ func listProjects(cmd *cobra.Command, args []string) error {
 
 		allProjects = append(allProjects, res.JSON200.Projects...)
 
-		if limitFlag > 0 && len(allProjects) >= limitFlag {
-			allProjects = allProjects[:limitFlag]
-			break
-		}
-
 		if res.JSON200.Next == "" {
 			break
 		}
 		nextToken = &res.JSON200.Next
 	}
 
-	projects := allProjects
+	if limitFlag > 0 && len(allProjects) > limitFlag {
+		allProjects = allProjects[:limitFlag]
+	}
 
 	table := "| ID | Name | Type | From Recipe | Organization ID | Team ID |\n"
 	table += "|----|------|------|-------------|-----------------|----------|\n"
 
-	for _, project := range projects {
+	for _, project := range allProjects {
 		var fromRecipe string
 		if project.FromRecipe != nil {
 			fromRecipe = *project.FromRecipe
@@ -126,9 +125,11 @@ func listProjects(cmd *cobra.Command, args []string) error {
 	}
 	cmd.Print(out)
 
-	totalCount := len(allProjects)
+	totalFetched := len(allProjects)
 	if limitFlag > 0 {
-		cmd.Printf("Showing %d of %d or more projects\n", len(projects), totalCount)
+		cmd.Printf("Showing %d/%d projects\n", len(allProjects), totalFetched)
+	} else {
+		cmd.Printf("Showing %d projects from %d pages\n", len(allProjects), pageCount)
 	}
 
 	return nil
