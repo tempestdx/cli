@@ -58,7 +58,7 @@ func listProjects(cmd *cobra.Command, args []string) error {
 	var nextToken *string
 
 	for {
-		res, err := tempestClient.ProjectCollectionWithResponse(context.TODO(), appapi.ProjectCollectionJSONRequestBody{
+		res, err := tempestClient.PostProjectsListWithResponse(context.TODO(), appapi.PostProjectsListJSONRequestBody{
 			Next: nextToken,
 		})
 		if err != nil {
@@ -149,7 +149,7 @@ func getProject(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("create client: %w", err)
 	}
 
-	res, err := tempestClient.GetProjectWithResponse(context.TODO(), appapi.GetProjectJSONRequestBody{
+	res, err := tempestClient.PostProjectsGetWithResponse(context.TODO(), appapi.PostProjectsGetJSONRequestBody{
 		Id: projectID,
 	})
 	if err != nil {

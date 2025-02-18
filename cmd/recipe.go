@@ -58,7 +58,7 @@ func listRecipes(cmd *cobra.Command, args []string) error {
 	var nextToken *string
 
 	for {
-		res, err := tempestClient.RecipeCollectionWithResponse(context.TODO(), appapi.RecipeCollectionJSONRequestBody{
+		res, err := tempestClient.PostRecipesListWithResponse(context.TODO(), appapi.PostRecipesListJSONRequestBody{
 			Next: nextToken,
 		})
 		if err != nil {
@@ -159,7 +159,7 @@ func getRecipe(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("create client: %w", err)
 	}
 
-	res, err := tempestClient.GetRecipeWithResponse(context.TODO(), appapi.GetRecipeJSONRequestBody{
+	res, err := tempestClient.PostRecipesGetWithResponse(context.TODO(), appapi.PostRecipesGetJSONRequestBody{
 		Id: recipeID,
 	})
 	if err != nil {

@@ -60,7 +60,7 @@ func listResources(cmd *cobra.Command, args []string) error {
 	var nextToken *string
 
 	for {
-		res, err := tempestClient.ResourceCollectionWithResponse(context.TODO(), appapi.ResourceCollectionJSONRequestBody{
+		res, err := tempestClient.PostResourcesListWithResponse(context.TODO(), appapi.PostResourcesListJSONRequestBody{
 			Next: nextToken,
 		})
 		if err != nil {
@@ -150,13 +150,13 @@ func getResource(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("create client: %w", err)
 	}
 
-	body := appapi.GetResourcesJSONRequestBody{Id: resourceID}
+	body := appapi.PostResourcesGetJSONRequestBody{Id: resourceID}
 	bodyBytes, err := json.Marshal(body)
 	if err != nil {
 		return fmt.Errorf("marshal request body: %w", err)
 	}
 
-	res, err := tempestClient.GetResourcesWithBodyWithResponse(context.TODO(), "POST", bytes.NewReader(bodyBytes))
+	res, err := tempestClient.PostResourcesGetWithBodyWithResponse(context.TODO(), "POST", bytes.NewReader(bodyBytes))
 	if err != nil {
 		return fmt.Errorf("get resource: %w", err)
 	}
