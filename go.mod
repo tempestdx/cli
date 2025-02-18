@@ -8,7 +8,7 @@ require (
 	github.com/charmbracelet/glamour v0.8.0
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
-	github.com/tempestdx/openapi v0.1.3
+	github.com/tempestdx/openapi v0.1.4
 	github.com/tempestdx/protobuf v0.1.3
 	github.com/tempestdx/sdk-go v0.1.5
 	github.com/tidwall/pretty v1.2.1
@@ -30,7 +30,7 @@ require (
 	github.com/danieljoos/wincred v1.2.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dlclark/regexp2 v1.11.0 // indirect
-	github.com/go-chi/chi/v5 v5.2.0 // indirect
+	github.com/go-chi/chi/v5 v5.2.1 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
