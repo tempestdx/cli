@@ -94,19 +94,19 @@ func listRecipes(cmd *cobra.Command, args []string) error {
 	table += "|-------|------|------|---------|---------|-----------|-------------|\n"
 
 	for _, recipe := range recipes {
-		teamID := " "
+		var teamID string
 		if recipe.TeamId != nil {
 			teamID = *recipe.TeamId
 		}
-		public := " "
+		var public string
 		if recipe.Public != nil {
 			public = fmt.Sprintf("%v", *recipe.Public)
 		}
-		published := " "
+		var published string
 		if recipe.Published != nil {
 			published = fmt.Sprintf("%v", *recipe.Published)
 		}
-		publishedAt := " "
+		var publishedAt string
 		if recipe.PublishedAt != nil {
 			publishedAt = recipe.PublishedAt.Format(time.RFC3339)
 		}
@@ -182,9 +182,24 @@ func getRecipe(cmd *cobra.Command, args []string) error {
 	recipe := res.JSON200
 
 	// Main Information
-	cmd.Printf("Name:\t%s\n", recipe.Name)
-	cmd.Printf("ID:\t%s\n", recipe.Id)
-	cmd.Printf("Type:\t%s\n", recipe.Type)
+	mainInfo := map[string]string{
+		"Name": recipe.Name,
+		"ID":   recipe.Id,
+		"Type": recipe.Type,
+	}
+
+	// Calculate the maximum key length for main information
+	maxMainInfoKeyLength := 0
+	for key := range mainInfo {
+		if len(key) > maxMainInfoKeyLength {
+			maxMainInfoKeyLength = len(key)
+		}
+	}
+
+	// Print each main information with aligned keys
+	for key, value := range mainInfo {
+		cmd.Printf("%-*s : %s\n", maxMainInfoKeyLength, key, value)
+	}
 	cmd.Println()
 
 	// Metadata
@@ -193,19 +208,33 @@ func getRecipe(cmd *cobra.Command, args []string) error {
 	if recipe.TeamId != nil {
 		teamID = *recipe.TeamId
 	}
-	cmd.Printf("  Team ID:\t%s\n", teamID)
-
 	createdAt := "-"
 	if recipe.CreatedAt != nil {
 		createdAt = recipe.CreatedAt.Format(time.RFC3339)
 	}
-	cmd.Printf("  Creation Timestamp:\t%s\n", createdAt)
-
 	updatedAt := "-"
 	if recipe.UpdatedAt != nil {
 		updatedAt = recipe.UpdatedAt.Format(time.RFC3339)
 	}
-	cmd.Printf("  Last Updated:\t%s\n", updatedAt)
+
+	metadata := map[string]string{
+		"Team ID":            teamID,
+		"Creation Timestamp": createdAt,
+		"Last Updated":       updatedAt,
+	}
+
+	// Calculate the maximum key length for metadata
+	maxMetadataKeyLength := 0
+	for key := range metadata {
+		if len(key) > maxMetadataKeyLength {
+			maxMetadataKeyLength = len(key)
+		}
+	}
+
+	// Print each metadata with aligned keys
+	for key, value := range metadata {
+		cmd.Printf("  %-*s : %s\n", maxMetadataKeyLength, key, value)
+	}
 	cmd.Println()
 
 	// Status
@@ -214,19 +243,33 @@ func getRecipe(cmd *cobra.Command, args []string) error {
 	if recipe.Public != nil {
 		public = fmt.Sprintf("%v", *recipe.Public)
 	}
-	cmd.Printf("  Public:\t%s\n", public)
-
 	published := "-"
 	if recipe.Published != nil {
 		published = fmt.Sprintf("%v", *recipe.Published)
 	}
-	cmd.Printf("  Published:\t%s\n", published)
-
 	publishedAt := "-"
 	if recipe.PublishedAt != nil {
 		publishedAt = recipe.PublishedAt.Format(time.RFC3339)
 	}
-	cmd.Printf("  Published At:\t%s\n", publishedAt)
+
+	status := map[string]string{
+		"Public":       public,
+		"Published":    published,
+		"Published At": publishedAt,
+	}
+
+	// Calculate the maximum key length for status
+	maxStatusKeyLength := 0
+	for key := range status {
+		if len(key) > maxStatusKeyLength {
+			maxStatusKeyLength = len(key)
+		}
+	}
+
+	// Print each status with aligned keys
+	for key, value := range status {
+		cmd.Printf("  %-*s : %s\n", maxStatusKeyLength, key, value)
+	}
 
 	return nil
 }

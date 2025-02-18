@@ -94,11 +94,11 @@ func listProjects(cmd *cobra.Command, args []string) error {
 	table += "|----|------|------|-------------|-----------------|----------|\n"
 
 	for _, project := range projects {
-		fromRecipe := " "
+		var fromRecipe string
 		if project.FromRecipe != nil {
 			fromRecipe = *project.FromRecipe
 		}
-		teamID := " "
+		var teamID string
 		if project.TeamId != nil {
 			teamID = *project.TeamId
 		}
@@ -172,32 +172,60 @@ func getProject(cmd *cobra.Command, args []string) error {
 	project := res.JSON200
 
 	// Main Information
-	cmd.Printf("Name:\t%s\n", project.Name)
-	cmd.Printf("ID:\t%s\n", project.Id)
+	mainInfo := map[string]string{
+		"Name": project.Name,
+		"ID":   project.Id,
+	}
+
+	// Calculate the maximum key length for main information
+	maxMainInfoKeyLength := 0
+	for key := range mainInfo {
+		if len(key) > maxMainInfoKeyLength {
+			maxMainInfoKeyLength = len(key)
+		}
+	}
+
+	// Print each main information with aligned keys
+	for key, value := range mainInfo {
+		cmd.Printf("%-*s : %s\n", maxMainInfoKeyLength, key, value)
+	}
 	cmd.Println()
 
 	// Metadata
 	cmd.Println("Metadata:")
-	cmd.Printf("  Type:\t%s\n", project.Type)
-	cmd.Printf("  Organization ID:\t%s\n", project.OrganizationId)
-
 	teamID := "-"
 	if project.TeamId != nil {
 		teamID = *project.TeamId
 	}
-	cmd.Printf("  Team ID:\t%s\n", teamID)
-
 	createdAt := "-"
 	if project.CreatedAt != nil {
 		createdAt = project.CreatedAt.Format(time.RFC3339)
 	}
-	cmd.Printf("  Creation Timestamp:\t%s\n", createdAt)
-
 	updatedAt := "-"
 	if project.UpdatedAt != nil {
 		updatedAt = project.UpdatedAt.Format(time.RFC3339)
 	}
-	cmd.Printf("  Last Updated:\t%s\n", updatedAt)
+
+	metadata := map[string]string{
+		"Type":               project.Type,
+		"Organization ID":    project.OrganizationId,
+		"Team ID":            teamID,
+		"Creation Timestamp": createdAt,
+		"Last Updated":       updatedAt,
+	}
+
+	// Calculate the maximum key length for metadata
+	maxMetadataKeyLength := 0
+	for key := range metadata {
+		if len(key) > maxMetadataKeyLength {
+			maxMetadataKeyLength = len(key)
+		}
+	}
+
+	// Print each metadata with aligned keys
+	for key, value := range metadata {
+		cmd.Printf("  %-*s : %s\n", maxMetadataKeyLength, key, value)
+	}
 	cmd.Println()
 
 	// Status
@@ -206,13 +234,28 @@ func getProject(cmd *cobra.Command, args []string) error {
 	if project.Published != nil {
 		published = fmt.Sprintf("%v", *project.Published)
 	}
-	cmd.Printf("  Published:\t%s\n", published)
-
 	fromRecipe := "-"
 	if project.FromRecipe != nil {
 		fromRecipe = *project.FromRecipe
 	}
-	cmd.Printf("  From Recipe:\t%s\n", fromRecipe)
+
+	status := map[string]string{
+		"Published":   published,
+		"From Recipe": fromRecipe,
+	}
+
+	// Calculate the maximum key length for status
+	maxStatusKeyLength := 0
+	for key := range status {
+		if len(key) > maxStatusKeyLength {
+			maxStatusKeyLength = len(key)
+		}
+	}
+
+	// Print each status with aligned keys
+	for key, value := range status {
+		cmd.Printf("  %-*s : %s\n", maxStatusKeyLength, key, value)
+	}
 
 	return nil
 }

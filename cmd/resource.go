@@ -96,11 +96,11 @@ func listResources(cmd *cobra.Command, args []string) error {
 	table += "|-------|------|------|----------------|\n"
 
 	for _, resource := range resources {
-		name := " "
+		var name string
 		if resource.Name != nil {
 			name = *resource.Name
 		}
-		orgID := " "
+		var orgID string
 		if resource.OrganizationId != nil {
 			orgID = *resource.OrganizationId
 		}
@@ -180,70 +180,111 @@ func getResource(cmd *cobra.Command, args []string) error {
 		name = *resource.Name
 	}
 
-	cmd.Printf("Name:\t%s\n", name)
-	cmd.Printf("ID:\t%s\n", resource.Id)
-	externalID := "-"
-	if resource.ExternalId != "" {
-		externalID = resource.ExternalId
-	}
-	cmd.Printf("External ID:\t%s\n", externalID)
-
-	externalURL := "-"
-	if resource.ExternalUrl != nil {
-		externalURL = *resource.ExternalUrl
-	}
-	cmd.Printf("External URL:\t%s\n", externalURL)
-	cmd.Println()
-
-	cmd.Println("Metadata:")
-	cmd.Printf("  Type:\t%s\n", resource.Type)
 	orgID := "-"
 	if resource.OrganizationId != nil {
 		orgID = *resource.OrganizationId
 	}
-	cmd.Printf("  Organization ID:\t%s\n", orgID)
 
 	createdBy := "-"
 	if resource.CreatedBy != nil {
 		createdBy = *resource.CreatedBy
 	}
-	cmd.Printf("  Created By:\t%s\n", createdBy)
 
 	createdAt := "-"
 	if resource.CreatedAt != nil {
 		createdAt = resource.CreatedAt.Format(time.RFC3339)
 	}
-	cmd.Printf("  Creation Timestamp:\t%s\n", createdAt)
 
 	updatedAt := "-"
 	if resource.UpdatedAt != nil {
 		updatedAt = resource.UpdatedAt.Format(time.RFC3339)
 	}
-	cmd.Printf("  Last Updated:\t%s\n", updatedAt)
 
 	syncedAt := "-"
 	if resource.SyncedAt != nil {
 		syncedAt = resource.SyncedAt.Format(time.RFC3339)
 	}
-	cmd.Printf("  Last Synced:\t%s\n", syncedAt)
+
+	externalID := "-"
+	if resource.ExternalId != "" {
+		externalID = resource.ExternalId
+	}
+
+	externalURL := "-"
+	if resource.ExternalUrl != nil {
+		externalURL = *resource.ExternalUrl
+	}
+
+	// Define the fields for the initial section
+	initialFields := map[string]string{
+		"Name":         name,
+		"ID":           resource.Id,
+		"External ID":  externalID,
+		"External URL": externalURL,
+	}
+
+	// Calculate the maximum key length for the initial fields
+	maxInitialKeyLength := 0
+	for key := range initialFields {
+		if len(key) > maxInitialKeyLength {
+			maxInitialKeyLength = len(key)
+		}
+	}
+
+	// Print each initial field with aligned keys
+	for key, value := range initialFields {
+		cmd.Printf("%-*s : %-30s\n", maxInitialKeyLength, key, value)
+	}
+	cmd.Println()
+
+	cmd.Println("Metadata:")
+	metadata := map[string]string{
+		"Type":               resource.Type,
+		"Organization ID":    orgID,
+		"Created By":         createdBy,
+		"Creation Timestamp": createdAt,
+		"Last Updated":       updatedAt,
+		"Last Synced":        syncedAt,
+	}
+
+	// Calculate the maximum key length for metadata
+	maxMetadataKeyLength := 0
+	for key := range metadata {
+		if len(key) > maxMetadataKeyLength {
+			maxMetadataKeyLength = len(key)
+		}
+	}
+
+	// Print each metadata with aligned keys
+	for key, value := range metadata {
+		cmd.Printf("  %-*s : %-30s\n", maxMetadataKeyLength, key, value)
+	}
 	cmd.Println()
 
 	cmd.Println("Properties:")
 	if resource.Properties != nil && len(*resource.Properties) > 0 {
+		// Calculate the maximum key length for properties
+		maxPropertyKeyLength := 0
+		for key := range *resource.Properties {
+			if len(key) > maxPropertyKeyLength {
+				maxPropertyKeyLength = len(key)
+			}
+		}
+
+		// Print each property with aligned keys
 		for key, value := range *resource.Properties {
-			cmd.Printf("  %s:\t%v\n", key, value)
+			cmd.Printf("  %-*s : %-30v\n", maxPropertyKeyLength, key, value)
 		}
 	} else {
 		cmd.Printf("  -\n")
 	}
 	cmd.Println()
 
-	cmd.Println("Status:")
 	status := "-"
 	if resource.Status != nil {
 		status = *resource.Status
 	}
-	cmd.Printf("  Status:\t%s\n", status)
+	cmd.Printf("%-*s: %-30s\n", len("Status"), "Status", status)
 
 	return nil
 }
