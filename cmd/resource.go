@@ -219,7 +219,7 @@ func getResource(cmd *cobra.Command, args []string) error {
 	// Define the fields for the initial section
 	initialFields := map[string]string{
 		"Name":         name,
-		"ID":           resource.Id,
+		"ID":           *resource.Id,
 		"External ID":  externalID,
 		"External URL": externalURL,
 	}
