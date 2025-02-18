@@ -6,7 +6,7 @@ require (
 	connectrpc.com/connect v1.18.1
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/charmbracelet/glamour v0.8.0
-	github.com/spf13/cobra v1.8.1
+	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
 	github.com/tempestdx/openapi v0.1.3
 	github.com/tempestdx/protobuf v0.1.3
@@ -26,7 +26,7 @@ require (
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/charmbracelet/lipgloss v0.12.1 // indirect
 	github.com/charmbracelet/x/ansi v0.1.4 // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.6 // indirect
 	github.com/danieljoos/wincred v1.2.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dlclark/regexp2 v1.11.0 // indirect
@@ -48,7 +48,7 @@ require (
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.1 // indirect
-	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/tidwall/gjson v1.18.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/yuin/goldmark v1.7.4 // indirect
