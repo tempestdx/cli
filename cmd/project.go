@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sort"
 	"time"
 
 	"github.com/charmbracelet/glamour"
@@ -178,16 +179,24 @@ func getProject(cmd *cobra.Command, args []string) error {
 		"ID":   project.Id,
 	}
 
+	// Extract and sort keys
+	mainInfoKeys := make([]string, 0, len(mainInfo))
+	for key := range mainInfo {
+		mainInfoKeys = append(mainInfoKeys, key)
+	}
+	sort.Strings(mainInfoKeys)
+
 	// Calculate the maximum key length for main information
 	maxMainInfoKeyLength := 0
-	for key := range mainInfo {
+	for _, key := range mainInfoKeys {
 		if len(key) > maxMainInfoKeyLength {
 			maxMainInfoKeyLength = len(key)
 		}
 	}
 
 	// Print each main information with aligned keys
-	for key, value := range mainInfo {
+	for _, key := range mainInfoKeys {
+		value := mainInfo[key]
 		cmd.Printf("%-*s : %s\n", maxMainInfoKeyLength, key, value)
 	}
 	cmd.Println()
@@ -215,16 +224,24 @@ func getProject(cmd *cobra.Command, args []string) error {
 		"Last Updated":       updatedAt,
 	}
 
+	// Extract and sort keys
+	metadataKeys := make([]string, 0, len(metadata))
+	for key := range metadata {
+		metadataKeys = append(metadataKeys, key)
+	}
+	sort.Strings(metadataKeys)
+
 	// Calculate the maximum key length for metadata
 	maxMetadataKeyLength := 0
-	for key := range metadata {
+	for _, key := range metadataKeys {
 		if len(key) > maxMetadataKeyLength {
 			maxMetadataKeyLength = len(key)
 		}
 	}
 
 	// Print each metadata with aligned keys
-	for key, value := range metadata {
+	for _, key := range metadataKeys {
+		value := metadata[key]
 		cmd.Printf("  %-*s : %s\n", maxMetadataKeyLength, key, value)
 	}
 	cmd.Println()
@@ -245,16 +262,24 @@ func getProject(cmd *cobra.Command, args []string) error {
 		"From Recipe": fromRecipe,
 	}
 
+	// Extract and sort keys
+	statusKeys := make([]string, 0, len(status))
+	for key := range status {
+		statusKeys = append(statusKeys, key)
+	}
+	sort.Strings(statusKeys)
+
 	// Calculate the maximum key length for status
 	maxStatusKeyLength := 0
-	for key := range status {
+	for _, key := range statusKeys {
 		if len(key) > maxStatusKeyLength {
 			maxStatusKeyLength = len(key)
 		}
 	}
 
 	// Print each status with aligned keys
-	for key, value := range status {
+	for _, key := range statusKeys {
+		value := status[key]
 		cmd.Printf("  %-*s : %s\n", maxStatusKeyLength, key, value)
 	}
 
