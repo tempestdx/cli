@@ -105,7 +105,7 @@ func listResources(cmd *cobra.Command, args []string) error {
 		}
 
 		table += fmt.Sprintf("| %s | %s | %s | %s |\n",
-			resource.Id,
+			*resource.Id,
 			name,
 			resource.Type,
 			orgID,
@@ -212,7 +212,7 @@ func getResource(cmd *cobra.Command, args []string) error {
 	}
 
 	externalURL := "-"
-	if resource.ExternalUrl != nil {
+	if resource.ExternalUrl != nil && *resource.ExternalUrl != "" {
 		externalURL = *resource.ExternalUrl
 	}
 
