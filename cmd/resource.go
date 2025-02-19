@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
 	"time"
 
 	"github.com/charmbracelet/glamour"
@@ -136,6 +137,11 @@ func listResources(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+type KeyValue struct {
+	Key   string
+	Value string
+}
+
 func getResource(cmd *cobra.Command, args []string) error {
 	resourceID := args[0]
 	token := loadTempestToken(cmd)
@@ -212,68 +218,76 @@ func getResource(cmd *cobra.Command, args []string) error {
 	}
 
 	externalURL := "-"
-	if resource.ExternalUrl != nil && *resource.ExternalUrl != "" {
+	if resource.ExternalUrl != nil && len(*resource.ExternalUrl) > 0 {
 		externalURL = *resource.ExternalUrl
 	}
 
-	// Define the fields for the initial section
-	initialFields := map[string]string{
-		"Name":         name,
-		"ID":           *resource.Id,
-		"External ID":  externalID,
-		"External URL": externalURL,
+	// Define the fields for the initial section using KeyValue slice
+	initialFields := []KeyValue{
+		{"Name", name},
+		{"ID", *resource.Id},
+		{"External ID", externalID},
+		{"External URL", externalURL},
 	}
 
 	// Calculate the maximum key length for the initial fields
 	maxInitialKeyLength := 0
-	for key := range initialFields {
-		if len(key) > maxInitialKeyLength {
-			maxInitialKeyLength = len(key)
+	for _, kv := range initialFields {
+		if len(kv.Key) > maxInitialKeyLength {
+			maxInitialKeyLength = len(kv.Key)
 		}
 	}
 
 	// Print each initial field with aligned keys
-	for key, value := range initialFields {
-		cmd.Printf("%-*s : %-30s\n", maxInitialKeyLength, key, value)
+	for _, kv := range initialFields {
+		cmd.Printf("%-*s : %-30s\n", maxInitialKeyLength, kv.Key, kv.Value)
 	}
 	cmd.Println()
 
 	cmd.Println("Metadata:")
-	metadata := map[string]string{
-		"Type":               resource.Type,
-		"Organization ID":    orgID,
-		"Created By":         createdBy,
-		"Creation Timestamp": createdAt,
-		"Last Updated":       updatedAt,
-		"Last Synced":        syncedAt,
+	metadata := []KeyValue{
+		{"Type", resource.Type},
+		{"Organization ID", orgID},
+		{"Created By", createdBy},
+		{"Creation Timestamp", createdAt},
+		{"Last Updated", updatedAt},
+		{"Last Synced", syncedAt},
 	}
 
 	// Calculate the maximum key length for metadata
 	maxMetadataKeyLength := 0
-	for key := range metadata {
-		if len(key) > maxMetadataKeyLength {
-			maxMetadataKeyLength = len(key)
+	for _, kv := range metadata {
+		if len(kv.Key) > maxMetadataKeyLength {
+			maxMetadataKeyLength = len(kv.Key)
 		}
 	}
 
 	// Print each metadata with aligned keys
-	for key, value := range metadata {
-		cmd.Printf("  %-*s : %-30s\n", maxMetadataKeyLength, key, value)
+	for _, kv := range metadata {
+		cmd.Printf("  %-*s : %-30s\n", maxMetadataKeyLength, kv.Key, kv.Value)
 	}
 	cmd.Println()
 
 	cmd.Println("Properties:")
 	if resource.Properties != nil && len(*resource.Properties) > 0 {
+		// Extract and sort keys
+		keys := make([]string, 0, len(*resource.Properties))
+		for key := range *resource.Properties {
+			keys = append(keys, key)
+		}
+		sort.Strings(keys)
+
 		// Calculate the maximum key length for properties
 		maxPropertyKeyLength := 0
-		for key := range *resource.Properties {
+		for _, key := range keys {
 			if len(key) > maxPropertyKeyLength {
 				maxPropertyKeyLength = len(key)
 			}
 		}
 
 		// Print each property with aligned keys
-		for key, value := range *resource.Properties {
+		for _, key := range keys {
+			value := (*resource.Properties)[key]
 			cmd.Printf("  %-*s : %-30v\n", maxPropertyKeyLength, key, value)
 		}
 	} else {
