@@ -86,6 +86,8 @@ func listResources(cmd *cobra.Command, args []string) error {
 		nextToken = &res.JSON200.Next
 	}
 
+	totalFetched := len(allResources)
+
 	if limitFlag > 0 && len(allResources) > limitFlag {
 		allResources = allResources[:limitFlag]
 	}
@@ -127,7 +129,6 @@ func listResources(cmd *cobra.Command, args []string) error {
 	}
 	cmd.Print(out)
 
-	totalFetched := len(allResources)
 	if limitFlag > 0 {
 		cmd.Printf("Showing %d/%d resources\n", len(resources), totalFetched)
 	} else {

@@ -86,6 +86,8 @@ func listProjects(cmd *cobra.Command, args []string) error {
 		nextToken = &res.JSON200.Next
 	}
 
+	totalFetched := len(allProjects)
+
 	if limitFlag > 0 && len(allProjects) > limitFlag {
 		allProjects = allProjects[:limitFlag]
 	}
@@ -126,7 +128,6 @@ func listProjects(cmd *cobra.Command, args []string) error {
 	}
 	cmd.Print(out)
 
-	totalFetched := len(allProjects)
 	if limitFlag > 0 {
 		cmd.Printf("Showing %d/%d projects\n", len(allProjects), totalFetched)
 	} else {
