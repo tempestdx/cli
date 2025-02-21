@@ -75,22 +75,22 @@ func TestFormatShowingSummary(t *testing.T) {
 		expected     string
 	}{
 		{
-			name:         "no limit, no pages",
+			name:         "no limit, single page",
 			itemCount:    10,
 			totalFetched: 10,
 			pageCount:    1,
 			itemType:     "recipe",
 			hasLimit:     false,
-			expected:     "Showing 10 recipes",
+			expected:     "Showing 10 recipes from 1 page",
 		},
 		{
-			name:         "limit, no pages",
-			itemCount:    10,
+			name:         "limit, single form",
+			itemCount:    1,
 			totalFetched: 10,
 			pageCount:    1,
 			itemType:     "recipe",
 			hasLimit:     true,
-			expected:     "Showing 10/10 recipes",
+			expected:     "Showing 1/10 recipe",
 		},
 		{
 			name:         "no limit, multiple pages",
@@ -102,22 +102,13 @@ func TestFormatShowingSummary(t *testing.T) {
 			expected:     "Showing 10 recipes from 2 pages",
 		},
 		{
-			name:         "limit, multiple pages",
+			name:         "limit, plural form",
 			itemCount:    10,
 			totalFetched: 20,
 			pageCount:    2,
 			itemType:     "recipe",
 			hasLimit:     true,
 			expected:     "Showing 10/20 recipes",
-		},
-		{
-			name:         "no limit, multiple pages",
-			itemCount:    10,
-			totalFetched: 20,
-			pageCount:    2,
-			itemType:     "recipe",
-			hasLimit:     false,
-			expected:     "Showing 10 recipes from 2 pages",
 		},
 	}
 
