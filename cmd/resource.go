@@ -11,6 +11,7 @@ import (
 
 	"github.com/charmbracelet/glamour"
 	"github.com/spf13/cobra"
+	"github.com/tempestdx/cli/internal/messages"
 	"github.com/tempestdx/cli/internal/secret"
 	appapi "github.com/tempestdx/openapi/app"
 )
@@ -59,8 +60,10 @@ func listResources(cmd *cobra.Command, args []string) error {
 
 	var allResources []appapi.Resource
 	var nextToken *string
+	pageCount := 0
 
 	for {
+		pageCount++
 		res, err := tempestClient.PostResourcesListWithResponse(context.TODO(), appapi.PostResourcesListJSONRequestBody{
 			Next: nextToken,
 		})
@@ -129,11 +132,7 @@ func listResources(cmd *cobra.Command, args []string) error {
 	}
 	cmd.Print(out)
 
-	if limitFlag > 0 {
-		cmd.Printf("Showing %d/%d resources\n", len(resources), totalFetched)
-	} else {
-		cmd.Printf("Showing %d resources\n", len(resources))
-	}
+	cmd.Print(messages.FormatShowingSummary(len(resources), totalFetched, pageCount, "resource", limitFlag > 0))
 
 	return nil
 }
