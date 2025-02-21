@@ -9,6 +9,7 @@ import (
 
 	"github.com/charmbracelet/glamour"
 	"github.com/spf13/cobra"
+	"github.com/tempestdx/cli/internal/messages"
 	"github.com/tempestdx/cli/internal/secret"
 	appapi "github.com/tempestdx/openapi/app"
 )
@@ -128,11 +129,7 @@ func listProjects(cmd *cobra.Command, args []string) error {
 	}
 	cmd.Print(out)
 
-	if limitFlag > 0 {
-		cmd.Printf("Showing %d/%d projects\n", len(allProjects), totalFetched)
-	} else {
-		cmd.Printf("Showing %d projects from %d pages\n", len(allProjects), pageCount)
-	}
+	cmd.Print(messages.FormatShowingSummary(len(allProjects), totalFetched, pageCount, "project", limitFlag > 0))
 
 	return nil
 }
