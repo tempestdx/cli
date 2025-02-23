@@ -18,7 +18,6 @@ var (
 
 	limitFlag int
 
-
 	rootCmd = &cobra.Command{
 		Use:     "tempest [command] [flags]",
 		Short:   "Tempest is a CLI tool to interact with the Tempest API and SDK",
@@ -59,6 +58,11 @@ func init() {
 	// Customize the help and version flags
 	rootCmd.Flags().BoolP("help", "h", false, "Help for tempest")
 	rootCmd.Flags().BoolP("version", "v", false, "Version for tempest")
+
+	// Override apiEndpoint with the value from the environment variable if set
+	if envAPIEndpoint := os.Getenv("TEMPEST_API_ENDPOINT"); envAPIEndpoint != "" {
+		apiEndpoint = envAPIEndpoint
+	}
 
 	tokenStore = &secret.Keyring{}
 }
