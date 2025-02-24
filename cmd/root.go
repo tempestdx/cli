@@ -85,7 +85,7 @@ func loadTempestToken(cmd *cobra.Command) string {
 
 	t, err := tokenStore.Get()
 	if err != nil {
-		cmd.PrintErrf("Could not get token from the system keyring: %v.\nPlease set TEMPEST_TOKEN_FILE or TEMPEST_TOKEN or run `tempest auth login` first.\n", err)
+		cmd.PrintErrf("Could not get the auth token from the system keyring: %v.\nPlease set either TEMPEST_TOKEN_FILE, TEMPEST_TOKEN or run `tempest auth login` first.\n", err)
 		os.Exit(1)
 	}
 
