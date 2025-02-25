@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tempestdx/cli/internal/secret"
 	appapi "github.com/tempestdx/openapi/app"
+	"github.com/tempestdx/cli/internal/messages"
 )
 
 var recipeCmd = &cobra.Command{
@@ -57,8 +58,10 @@ func listRecipes(cmd *cobra.Command, args []string) error {
 
 	var allRecipes []appapi.Recipe
 	var nextToken *string
+	pageCount := 0
 
 	for {
+		pageCount++
 		res, err := tempestClient.PostRecipesListWithResponse(context.TODO(), appapi.PostRecipesListJSONRequestBody{
 			Next: nextToken,
 		})
@@ -138,11 +141,7 @@ func listRecipes(cmd *cobra.Command, args []string) error {
 	}
 	cmd.Print(out)
 
-	if limitFlag > 0 {
-		cmd.Printf("Showing %d/%d recipes\n", len(recipes), totalFetched)
-	} else {
-		cmd.Printf("Showing %d recipes\n", len(recipes))
-	}
+	cmd.Print(messages.FormatShowingSummary(len(recipes), totalFetched, pageCount, "recipe", limitFlag > 0))
 
 	return nil
 }
