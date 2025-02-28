@@ -18,7 +18,6 @@ var (
 
 	limitFlag int
 
-
 	rootCmd = &cobra.Command{
 		Use:     "tempest [command] [flags]",
 		Short:   "Tempest is a CLI tool to interact with the Tempest API and SDK",
@@ -60,6 +59,11 @@ func init() {
 	rootCmd.Flags().BoolP("help", "h", false, "Help for tempest")
 	rootCmd.Flags().BoolP("version", "v", false, "Version for tempest")
 
+	// Override apiEndpoint with the value from the environment variable if set
+	if envAPIEndpoint := os.Getenv("TEMPEST_API_ENDPOINT"); envAPIEndpoint != "" {
+		apiEndpoint = envAPIEndpoint
+	}
+
 	tokenStore = &secret.Keyring{}
 }
 
@@ -81,7 +85,7 @@ func loadTempestToken(cmd *cobra.Command) string {
 
 	t, err := tokenStore.Get()
 	if err != nil {
-		cmd.PrintErrf("get token: %v\n", err)
+		cmd.PrintErrf("Could not get the auth token from the system keyring: %v.\nPlease set either TEMPEST_TOKEN_FILE, TEMPEST_TOKEN or run `tempest auth login` first.\n", err)
 		os.Exit(1)
 	}
 
