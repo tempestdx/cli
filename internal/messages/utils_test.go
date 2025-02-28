@@ -27,14 +27,14 @@ func TestFormatShowingSummary(t *testing.T) {
 		{
 			name:         "no limit, single form",
 			itemCount:    1,
-			totalFetched: 10,
+			totalFetched: 1,
 			itemType:     "resource",
 			expected:     "Showing 1 resource",
 		},
 		{
 			name:         "no limit, plural form",
 			itemCount:    10,
-			totalFetched: 20,
+			totalFetched: 10,
 			itemType:     "recipe",
 			expected:     "Showing 10 recipes",
 		},
