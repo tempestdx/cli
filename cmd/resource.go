@@ -11,6 +11,7 @@ import (
 
 	"github.com/charmbracelet/glamour"
 	"github.com/spf13/cobra"
+	"github.com/tempestdx/cli/internal/messages"
 	"github.com/tempestdx/cli/internal/secret"
 	appapi "github.com/tempestdx/openapi/app"
 )
@@ -129,11 +130,7 @@ func listResources(cmd *cobra.Command, args []string) error {
 	}
 	cmd.Print(out)
 
-	if limitFlag > 0 {
-		cmd.Printf("Showing %d/%d resources\n", len(resources), totalFetched)
-	} else {
-		cmd.Printf("Showing %d resources\n", len(resources))
-	}
+	cmd.Printf("%s\n", messages.FormatShowingSummary(len(resources), totalFetched, "resource"))
 
 	return nil
 }

@@ -9,6 +9,7 @@ import (
 
 	"github.com/charmbracelet/glamour"
 	"github.com/spf13/cobra"
+	"github.com/tempestdx/cli/internal/messages"
 	"github.com/tempestdx/cli/internal/secret"
 	appapi "github.com/tempestdx/openapi/app"
 )
@@ -138,11 +139,7 @@ func listRecipes(cmd *cobra.Command, args []string) error {
 	}
 	cmd.Print(out)
 
-	if limitFlag > 0 {
-		cmd.Printf("Showing %d/%d recipes\n", len(recipes), totalFetched)
-	} else {
-		cmd.Printf("Showing %d recipes\n", len(recipes))
-	}
+	cmd.Printf("%s\n", messages.FormatShowingSummary(len(recipes), totalFetched, "recipe"))
 
 	return nil
 }
