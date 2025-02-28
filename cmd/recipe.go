@@ -58,10 +58,8 @@ func listRecipes(cmd *cobra.Command, args []string) error {
 
 	var allRecipes []appapi.Recipe
 	var nextToken *string
-	pageCount := 0
 
 	for {
-		pageCount++
 		res, err := tempestClient.PostRecipesListWithResponse(context.TODO(), appapi.PostRecipesListJSONRequestBody{
 			Next: nextToken,
 		})
@@ -141,7 +139,7 @@ func listRecipes(cmd *cobra.Command, args []string) error {
 	}
 	cmd.Print(out)
 
-	cmd.Printf("%s\n", messages.FormatShowingSummary(len(recipes), totalFetched, pageCount, "recipe", limitFlag > 0))
+	cmd.Printf("%s\n", messages.FormatShowingSummary(len(recipes), totalFetched, "recipe", limitFlag > 0))
 
 	return nil
 }

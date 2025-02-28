@@ -58,10 +58,8 @@ func listProjects(cmd *cobra.Command, args []string) error {
 
 	var allProjects []appapi.Project
 	var nextToken *string
-	pageCount := 0
 
 	for {
-		pageCount++
 		res, err := tempestClient.PostProjectsListWithResponse(context.TODO(), appapi.PostProjectsListJSONRequestBody{
 			Next: nextToken,
 		})
@@ -129,7 +127,7 @@ func listProjects(cmd *cobra.Command, args []string) error {
 	}
 	cmd.Print(out)
 
-	cmd.Printf("%s\n", messages.FormatShowingSummary(len(allProjects), totalFetched, pageCount, "project", limitFlag > 0))
+	cmd.Printf("%s\n", messages.FormatShowingSummary(len(allProjects), totalFetched, "project", limitFlag > 0))
 
 	return nil
 }

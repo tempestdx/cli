@@ -60,10 +60,8 @@ func listResources(cmd *cobra.Command, args []string) error {
 
 	var allResources []appapi.Resource
 	var nextToken *string
-	pageCount := 0
 
 	for {
-		pageCount++
 		res, err := tempestClient.PostResourcesListWithResponse(context.TODO(), appapi.PostResourcesListJSONRequestBody{
 			Next: nextToken,
 		})
@@ -132,7 +130,7 @@ func listResources(cmd *cobra.Command, args []string) error {
 	}
 	cmd.Print(out)
 
-	cmd.Printf("%s\n", messages.FormatShowingSummary(len(resources), totalFetched, pageCount, "resource", limitFlag > 0))
+	cmd.Printf("%s\n", messages.FormatShowingSummary(len(resources), totalFetched, "resource", limitFlag > 0))
 
 	return nil
 }
