@@ -132,7 +132,7 @@ func listResources(cmd *cobra.Command, args []string) error {
 	}
 	cmd.Print(out)
 
-	cmd.Print(messages.FormatShowingSummary(len(resources), totalFetched, pageCount, "resource", limitFlag > 0))
+	cmd.Printf("%s\n", messages.FormatShowingSummary(len(resources), totalFetched, pageCount, "resource", limitFlag > 0))
 
 	return nil
 }
