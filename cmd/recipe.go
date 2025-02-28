@@ -139,7 +139,7 @@ func listRecipes(cmd *cobra.Command, args []string) error {
 	}
 	cmd.Print(out)
 
-	cmd.Printf("%s\n", messages.FormatShowingSummary(len(recipes), totalFetched, "recipe", limitFlag > 0))
+	cmd.Printf("%s\n", messages.FormatShowingSummary(len(recipes), totalFetched, "recipe"))
 
 	return nil
 }

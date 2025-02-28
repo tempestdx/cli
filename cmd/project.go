@@ -127,7 +127,7 @@ func listProjects(cmd *cobra.Command, args []string) error {
 	}
 	cmd.Print(out)
 
-	cmd.Printf("%s\n", messages.FormatShowingSummary(len(allProjects), totalFetched, "project", limitFlag > 0))
+	cmd.Printf("%s\n", messages.FormatShowingSummary(len(allProjects), totalFetched, "project"))
 
 	return nil
 }
