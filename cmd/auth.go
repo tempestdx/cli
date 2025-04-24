@@ -77,7 +77,7 @@ func authLoginRunE(cmd *cobra.Command, args []string) error {
 		}
 
 		if input == "" {
-			return errors.New("empty token\n Try: tempest auth login --with-token < token.txt\n")
+			return errors.New("empty token\n Try: tempest auth login --with-token < token.txt")
 		}
 	} else {
 		if term.IsTerminal(int(syscall.Stdin)) {
@@ -91,7 +91,7 @@ func authLoginRunE(cmd *cobra.Command, args []string) error {
 			input = strings.TrimSpace(string(bytePassword))
 
 			if input == "" {
-				return errors.New("API Key cannot be empty.")
+				return errors.New("API Key cannot be empty")
 			}
 		} else {
 			input, err = readInputFromStdin(cmd)
@@ -100,7 +100,7 @@ func authLoginRunE(cmd *cobra.Command, args []string) error {
 			}
 
 			if input == "" {
-				return errors.New("empty token\n Try: tempest auth login < token.txt\n")
+				return errors.New("empty token\n Try: tempest auth login < token.txt")
 			}
 		}
 	}
@@ -116,7 +116,7 @@ func readInputFromStdin(cmd *cobra.Command) (string, error) {
 	}
 
 	if (stat.Mode() & os.ModeCharDevice) != 0 {
-		return "", errors.New("Nothing read from stdin.\n Try: tempest auth --with-token < token.txt")
+		return "", errors.New("nothing read from stdin\n Try: tempest auth --with-token < token.txt")
 	}
 
 	b, err := io.ReadAll(cmd.InOrStdin())
