@@ -48,7 +48,7 @@ func initRunE(cmd *cobra.Command, args []string) error {
 	}
 
 	if !versionRegex.MatchString(appInitAppVersion) {
-		return fmt.Errorf("invalid version format. Must be in the format 'v1', 'v2', etc.")
+		return fmt.Errorf("invalid version format. Must be in the format 'v1', 'v2', etc")
 	}
 
 	workdir, err := os.Getwd()
@@ -150,7 +150,12 @@ Location: %s
 		if err != nil {
 			return err
 		}
-		defer out.Close()
+		defer func() {
+			if err := out.Close(); err != nil {
+				// Log the error or handle it as needed
+				fmt.Fprintf(os.Stderr, "error closing file: %v\n", err)
+			}
+		}()
 
 		if err := t.Execute(out, struct {
 			PackageName string
@@ -239,7 +244,12 @@ func generateGitIgnore(cfgPath string) error {
 		if err != nil {
 			return err
 		}
-		defer f.Close()
+		defer func() {
+			if err := f.Close(); err != nil {
+				// Log the error or handle it as needed
+				fmt.Fprintf(os.Stderr, "error closing file: %v\n", err)
+			}
+		}()
 
 		_, err = f.Write(gitignoreContents)
 		if err != nil {

@@ -50,7 +50,7 @@ func init() {
 }
 
 func serveRunE(cmd *cobra.Command, args []string) error {
-	var logLevel slog.Level = slog.LevelInfo
+	var logLevel = slog.LevelInfo
 	if debugMode {
 		logLevel = slog.LevelDebug
 	}

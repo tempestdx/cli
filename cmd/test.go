@@ -181,7 +181,7 @@ func testRunE(cmd *cobra.Command, args []string) error {
 
 	case "update":
 		if testExternalID == "" {
-			return fmt.Errorf("external ID (--external-id) is required for update operation.")
+			return fmt.Errorf("external ID (--external-id) is required for update operation")
 		}
 
 		req := &appv1.ExecuteResourceOperationRequest{
@@ -227,7 +227,7 @@ func testRunE(cmd *cobra.Command, args []string) error {
 
 	case "delete":
 		if testExternalID == "" {
-			return fmt.Errorf("external ID (--external-id) is required for destroy operation.")
+			return fmt.Errorf("external ID (--external-id) is required for destroy operation")
 		}
 
 		res, err := runner.Client.ExecuteResourceOperation(context.TODO(), connect.NewRequest(&appv1.ExecuteResourceOperationRequest{
@@ -287,7 +287,7 @@ func testRunE(cmd *cobra.Command, args []string) error {
 		}
 	case "read":
 		if testExternalID == "" {
-			return fmt.Errorf("external ID (--external-id) is required for get operation.")
+			return fmt.Errorf("external ID (--external-id) is required for get operation")
 		}
 
 		req := &appv1.ExecuteResourceOperationRequest{
