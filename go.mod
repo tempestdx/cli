@@ -8,7 +8,7 @@ require (
 	github.com/charmbracelet/glamour v0.10.0
 	github.com/dustin/go-humanize v1.0.1
 	github.com/spf13/cobra v1.9.1
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.0
 	github.com/tempestdx/openapi v0.1.6
 	github.com/tempestdx/protobuf v0.1.4
 	github.com/tempestdx/sdk-go v0.1.6
