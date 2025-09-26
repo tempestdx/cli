@@ -3,7 +3,7 @@ module github.com/tempestdx/cli
 go 1.24.0
 
 require (
-	connectrpc.com/connect v1.18.1
+	connectrpc.com/connect v1.19.0
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/charmbracelet/glamour v0.10.0
 	github.com/dustin/go-humanize v1.0.1
